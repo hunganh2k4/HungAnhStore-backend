@@ -26,9 +26,6 @@ export class Product {
   @Column('text', { nullable: true })
   description: string;
 
-  @Column('decimal')
-  price: number;
-
   @ManyToOne(() => Category, category => category.products)
   category: Category;
 

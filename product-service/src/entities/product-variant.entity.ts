@@ -17,6 +17,9 @@ export class ProductVariant {
   @Column()
   sku: string;
 
+  @Column()
+  color: string;  
+
   @Column('decimal')
   price: number;
 

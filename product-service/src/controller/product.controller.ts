@@ -49,21 +49,13 @@ export class ProductController {
     return this.service.remove(id);
   }
 
-  // STOCK IN
-  @Post(':id/stock-in')
-  stockIn(
-    @Param('id', ParseIntPipe) id: number,
-    @Body('quantity') quantity: number,
-  ) {
-    return this.service.stockIn(id, quantity);
-  }
 
-  // STOCK OUT
-  @Post(':id/stock-out')
-  stockOut(
+  // ADD VARIANT
+  @Post(':id/variants')
+  addVariant(
     @Param('id', ParseIntPipe) id: number,
-    @Body('quantity') quantity: number,
+    @Body() body: any,
   ) {
-    return this.service.stockOut(id, quantity);
+    return this.service.addVariant(id, body);
   }
 }

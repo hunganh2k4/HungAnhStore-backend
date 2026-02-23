@@ -71,7 +71,6 @@ export class ProductService {
       name: data.name,
       slug: slug,
       description: data.description,
-      price: data.price,
       category,
       brand,
     });
@@ -104,7 +103,13 @@ export class ProductService {
   // FIND ALL + FILTER + PAGINATION
   // =============================
   async findAll(query: any) {
-    const { page = 1, limit = 10, categoryId, brandId, search } = query;
+    const {
+      page = 1,
+      limit = 10,
+      brand,
+      category,
+      search,
+    } = query;
 
     const qb = this.productRepo
       .createQueryBuilder('product')
@@ -117,45 +122,40 @@ export class ProductService {
         { isMain: true },
       );
 
-    if (categoryId) {
-      qb.andWhere('category.id = :categoryId', { categoryId });
+    // =============================
+    // FILTER BRAND BY SLUG
+    // =============================
+    if (brand) {
+      qb.andWhere('brand.slug = :brandSlug', {
+        brandSlug: brand,
+      });
     }
 
-    if (brandId) {
-      qb.andWhere('brand.id = :brandId', { brandId });
+    // =============================
+    // FILTER CATEGORY BY SLUG
+    // =============================
+    if (category) {
+      qb.andWhere('category.slug = :categorySlug', {
+        categorySlug: category,
+      });
     }
 
+    // =============================
+    // SEARCH BY PRODUCT NAME
+    // =============================
     if (search) {
       qb.andWhere('product.name LIKE :search', {
         search: `%${search}%`,
       });
     }
 
-    // qb.addSelect(subQuery => {
-    //   return subQuery
-    //     .select(`
-    //       SUM(
-    //         CASE 
-    //           WHEN stock.type = 'IN' THEN stock.quantity
-    //           WHEN stock.type = 'OUT' THEN -stock.quantity
-    //           ELSE 0
-    //         END
-    //       )
-    //     `)
-    //     .from(StockMovement, 'stock')
-    //     .where('stock.productId = product.id');
-    // }, 'totalStock');
+    // =============================
+    // PAGINATION
+    // =============================
+    qb.skip((page - 1) * limit)
+      .take(limit);
 
-    qb.skip((page - 1) * limit).take(limit);
-
-    const { entities, raw } = await qb.getRawAndEntities();
-
-    const data = entities.map((item, index) => ({
-      ...item,
-      stock: Number(raw[index].totalStock) || 0,
-    }));
-
-    const total = await qb.getCount();
+    const [data, total] = await qb.getManyAndCount();
 
     return {
       data,
@@ -163,6 +163,40 @@ export class ProductService {
       page: Number(page),
       lastPage: Math.ceil(total / limit),
     };
+  }
+
+
+  // =============================
+  // ADD VARIANT
+  // =============================
+  async addVariant(productId: number, data: any) {
+    const product = await this.productRepo.findOne({
+      where: { id: productId },
+      relations: ['variants'],
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    // Kiểm tra SKU trùng
+    const existingSku = await this.variantRepo.findOne({
+      where: { sku: data.sku },
+    });
+
+    if (existingSku) {
+      throw new BadRequestException('SKU already exists');
+    }
+
+    const variant = this.variantRepo.create({
+      sku: data.sku,
+      color: data.color,
+      price: data.price, 
+      stock: data.stock ?? 0,
+      product,
+    });
+
+    return this.variantRepo.save(variant);
   }
 
   // =============================
@@ -208,18 +242,17 @@ export class ProductService {
   // =============================
   // STOCK IN
   // =============================
-  async stockIn(productId: number, quantity: number) {
-    const product = await this.findOne(productId);
-
-    product.variants?.forEach(v => {
-      v.stock += 0; // nếu dùng variant riêng
+  async stockIn(variantId: number, quantity: number) {
+    const variant = await this.variantRepo.findOne({
+      where: { id: variantId },
     });
 
-    await this.stockRepo.save({
-      product,
-      type: StockType.IN,
-      quantity,
-    });
+    if (!variant) {
+      throw new NotFoundException('Product in variant not found');
+    }
+
+    variant.stock += quantity;
+    await this.variantRepo.save(variant);
 
     return { message: 'Stock added successfully' };
   }
@@ -227,24 +260,24 @@ export class ProductService {
   // =============================
   // STOCK OUT
   // =============================
-  async stockOut(productId: number, quantity: number) {
-    const product = await this.findOne(productId);
+  async stockOut(variantId: number, quantity: number) {
+    const variant = await this.variantRepo.findOne({
+      where: { id: variantId },
+    });
 
-    const totalStock = product.variants?.reduce(
-      (sum, v) => sum + v.stock,
-      0,
-    ) || 0;
+    if (!variant) {
+      throw new NotFoundException('Product in variant not found');
+    }
 
-    if (totalStock < quantity) {
+    if (variant.stock < quantity) {
       throw new BadRequestException('Not enough stock');
     }
 
-    await this.stockRepo.save({
-      product,
-      type: StockType.OUT,
-      quantity,
-    });
+    variant.stock -= quantity;
+    await this.variantRepo.save(variant);
 
     return { message: 'Stock out successfully' };
   }
+
+
 }

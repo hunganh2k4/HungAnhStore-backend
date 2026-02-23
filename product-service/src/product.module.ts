@@ -11,6 +11,7 @@ import { StockMovement } from './entities/stock-movement.entity';
 
 import { ProductService } from './services/product.service';
 import { ProductController } from './controller/product.controller';
+import { VariantController } from './controller/variant.controller';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { ProductController } from './controller/product.controller';
       StockMovement,
     ]),
   ],
-  controllers: [ProductController],
+  controllers: [ProductController, VariantController],
   providers: [ProductService],
   exports: [ProductService], 
 })
