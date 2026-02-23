@@ -3,8 +3,10 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
 import { Product } from './product.entity';
+import { StockMovement } from './stock-movement.entity';
 
 @Entity('product_variants')
 export class ProductVariant {
@@ -25,4 +27,7 @@ export class ProductVariant {
     onDelete: 'CASCADE',
   })
   product: Product;
+
+  @OneToMany(() => StockMovement, movement => movement.variant)
+  movements: StockMovement[];
 }

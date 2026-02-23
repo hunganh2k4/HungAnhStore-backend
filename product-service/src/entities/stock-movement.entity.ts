@@ -5,7 +5,7 @@ import {
   ManyToOne,
   CreateDateColumn,
 } from 'typeorm';
-import { Product } from './product.entity';
+import { ProductVariant } from './product-variant.entity';
 
 export enum StockType {
   IN = 'IN',
@@ -18,8 +18,10 @@ export class StockMovement {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Product, product => product.movements)
-  product: Product;
+  @ManyToOne(() => ProductVariant, variant => variant.movements, {
+    onDelete: 'CASCADE',
+  })
+  variant: ProductVariant;
 
   @Column({
     type: 'enum',

@@ -9,7 +9,7 @@ import { Category } from './category.entity';
 import { Brand } from './brand.entity';
 import { ProductImage } from './product-image.entity';
 import { ProductVariant } from './product-variant.entity';
-import { StockMovement } from './stock-movement.entity';
+// import { StockMovement } from './stock-movement.entity';
 
 @Entity('products')
 export class Product {
@@ -19,6 +19,9 @@ export class Product {
 
   @Column()
   name: string;
+
+  @Column({ unique: true })
+  slug: string; // iphone-17-256gb
 
   @Column('text', { nullable: true })
   description: string;
@@ -38,6 +41,6 @@ export class Product {
   @OneToMany(() => ProductVariant, variant => variant.product)
   variants: ProductVariant[];
 
-  @OneToMany(() => StockMovement, movement => movement.product)
-  movements: StockMovement[];
+  // @OneToMany(() => StockMovement, movement => movement.product)
+  // movements: StockMovement[];
 }

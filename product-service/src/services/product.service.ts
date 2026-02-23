@@ -11,6 +11,8 @@ import { Category } from '../entities/category.entity';
 import { Brand } from '../entities/brand.entity';
 import { ProductImage } from '../entities/product-image.entity';
 import { StockMovement, StockType } from '../entities/stock-movement.entity';
+import { ProductVariant } from '../entities/product-variant.entity';
+import { slugify } from '../common/utils/slug.util';
 
 @Injectable()
 export class ProductService {
@@ -29,7 +31,22 @@ export class ProductService {
 
     @InjectRepository(ProductImage)
     private readonly imageRepo: Repository<ProductImage>,
+
+    @InjectRepository(ProductVariant)
+    private readonly variantRepo: Repository<ProductVariant>,
   ) {}
+
+  private async generateUniqueSlug(name: string): Promise<string> {
+    const baseSlug = slugify(name);
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (await this.productRepo.findOne({ where: { slug } })) {
+      slug = `${baseSlug}-${counter++}`;
+    }
+
+    return slug;
+  }
 
   // =============================
   // CREATE PRODUCT
@@ -47,9 +64,12 @@ export class ProductService {
       throw new BadRequestException('Invalid category or brand');
     }
 
+    const slug = await this.generateUniqueSlug(data.name);
+
     // Tạo product 
     const product = this.productRepo.create({
       name: data.name,
+      slug: slug,
       description: data.description,
       price: data.price,
       category,
@@ -71,7 +91,7 @@ export class ProductService {
       await this.imageRepo.save(images);
     }
 
-    // 3️⃣ Load lại full data
+    // Load lại full data
     const result = await this.productRepo.findOne({
       where: { id: savedProduct.id },
       relations: ['category', 'brand', 'images'],
@@ -111,20 +131,20 @@ export class ProductService {
       });
     }
 
-    qb.addSelect(subQuery => {
-      return subQuery
-        .select(`
-          SUM(
-            CASE 
-              WHEN stock.type = 'IN' THEN stock.quantity
-              WHEN stock.type = 'OUT' THEN -stock.quantity
-              ELSE 0
-            END
-          )
-        `)
-        .from(StockMovement, 'stock')
-        .where('stock.productId = product.id');
-    }, 'totalStock');
+    // qb.addSelect(subQuery => {
+    //   return subQuery
+    //     .select(`
+    //       SUM(
+    //         CASE 
+    //           WHEN stock.type = 'IN' THEN stock.quantity
+    //           WHEN stock.type = 'OUT' THEN -stock.quantity
+    //           ELSE 0
+    //         END
+    //       )
+    //     `)
+    //     .from(StockMovement, 'stock')
+    //     .where('stock.productId = product.id');
+    // }, 'totalStock');
 
     qb.skip((page - 1) * limit).take(limit);
 
@@ -156,7 +176,6 @@ export class ProductService {
         'brand',
         'images',
         'variants',
-        'stockMovements',
       ],
     });
 
