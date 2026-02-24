@@ -55,9 +55,15 @@ export class UserService {
   // INTERNAL: GET RAW USER (for auth)
   // ===============================
   async findRawByEmail(email: string) {
-    return this.repo.findOne({
+    const user = await this.repo.findOne({
       where: { email, deleted: false },
     });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 
   // ===============================

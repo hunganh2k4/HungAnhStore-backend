@@ -5,7 +5,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { MailService } from './mail.service';
-
+import { RedisService } from './redis/redis.service';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { PassportModule } from '@nestjs/passport';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -14,6 +17,7 @@ import { MailService } from './mail.service';
     }),
 
     HttpModule,
+    PassportModule,
 
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -35,6 +39,6 @@ import { MailService } from './mail.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, MailService],
+  providers: [AuthService, MailService, RedisService, JwtStrategy,JwtAuthGuard],
 })
 export class AuthModule {}
