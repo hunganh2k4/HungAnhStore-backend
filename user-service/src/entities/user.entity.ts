@@ -22,12 +22,6 @@ export class User {
   @Column({ default: false })
   deleted: boolean;
 
-  @Column({ default: false })
-  blocked: boolean;
-
-  @Column({ default: 'USER' })
-  role: string;
-
   @CreateDateColumn()
   createdAt: Date;
 }
