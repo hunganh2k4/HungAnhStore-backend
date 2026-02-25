@@ -6,19 +6,19 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Product } from '../entities/product.entity';
+import { ProductLine } from '../entities/product-line.entity';
 import { Category } from '../entities/category.entity';
 import { Brand } from '../entities/brand.entity';
 import { ProductImage } from '../entities/product-image.entity';
-import { StockMovement, StockType } from '../entities/stock-movement.entity';
-import { ProductVariant } from '../entities/product-variant.entity';
+// import { StockMovement, StockType } from '../entities/stock-movement.entity';
+import { Product } from '../entities/product.entity';
 import { slugify } from '../common/utils/slug.util';
 
 @Injectable()
 export class ProductService {
   constructor(
-    @InjectRepository(Product)
-    private readonly productRepo: Repository<Product>,
+    @InjectRepository(ProductLine)
+    private readonly productLineRepo: Repository<ProductLine>,
 
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
@@ -26,14 +26,14 @@ export class ProductService {
     @InjectRepository(Brand)
     private readonly brandRepo: Repository<Brand>,
 
-    @InjectRepository(StockMovement)
-    private readonly stockRepo: Repository<StockMovement>,
+    // @InjectRepository(StockMovement)
+    // private readonly stockRepo: Repository<StockMovement>,
 
     @InjectRepository(ProductImage)
     private readonly imageRepo: Repository<ProductImage>,
 
-    @InjectRepository(ProductVariant)
-    private readonly variantRepo: Repository<ProductVariant>,
+    @InjectRepository(Product)
+    private readonly productRepo: Repository<Product>,
   ) {}
 
   private async generateUniqueSlug(name: string): Promise<string> {
@@ -41,7 +41,7 @@ export class ProductService {
     let slug = baseSlug;
     let counter = 1;
 
-    while (await this.productRepo.findOne({ where: { slug } })) {
+    while (await this.productLineRepo.findOne({ where: { slug } })) {
       slug = `${baseSlug}-${counter++}`;
     }
 
@@ -49,33 +49,31 @@ export class ProductService {
   }
 
   // =============================
-  // CREATE PRODUCT
+  // CREATE PRODUCT LINE
   // =============================
-  async create(data: any) {
+  async createProductLine(data: any) {
     const category = await this.categoryRepo.findOne({
-      where: { id: data.categoryId },
+      where: { slug: data.category },
     });
 
     const brand = await this.brandRepo.findOne({
-      where: { id: data.brandId },
+      where: { slug: data.brand },
     });
 
     if (!category || !brand) {
       throw new BadRequestException('Invalid category or brand');
     }
-
     const slug = await this.generateUniqueSlug(data.name);
 
-    // Tạo product 
-    const product = this.productRepo.create({
+    const productLine = this.productLineRepo.create({
       name: data.name,
-      slug: slug,
+      slug,
       description: data.description,
       category,
       brand,
     });
-
-    const savedProduct = await this.productRepo.save(product);
+    
+    const savedProductLine = await this.productLineRepo.save(productLine);
 
     // Tạo images nếu có
     if (data.images?.length) {
@@ -83,7 +81,7 @@ export class ProductService {
         this.imageRepo.create({
           imageUrl: img.imageUrl,
           isMain: img.isMain ?? false,
-          product: savedProduct,
+          productLine: savedProductLine,
         }),
       );
 
@@ -91,8 +89,8 @@ export class ProductService {
     }
 
     // Load lại full data
-    const result = await this.productRepo.findOne({
-      where: { id: savedProduct.id },
+    const result = await this.productLineRepo.findOne({
+      where: { id: savedProductLine.id },
       relations: ['category', 'brand', 'images'],
     });
 
@@ -102,7 +100,7 @@ export class ProductService {
   // =============================
   // FIND ALL + FILTER + PAGINATION
   // =============================
-  async findAll(query: any) {
+  async findAllProductLine(query: any) {
     const {
       page = 1,
       limit = 10,
@@ -111,12 +109,12 @@ export class ProductService {
       search,
     } = query;
 
-    const qb = this.productRepo
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.category', 'category')
-      .leftJoinAndSelect('product.brand', 'brand')
+    const qb = this.productLineRepo
+      .createQueryBuilder('product_lines')
+      .leftJoinAndSelect('product_lines.category', 'category')
+      .leftJoinAndSelect('product_lines.brand', 'brand')
       .leftJoinAndSelect(
-        'product.images',
+        'product_lines.images',
         'images',
         'images.isMain = :isMain',
         { isMain: true },
@@ -167,20 +165,20 @@ export class ProductService {
 
 
   // =============================
-  // ADD VARIANT
+  // ADD PRODUCT TO PRODUCT LINE
   // =============================
-  async addVariant(productId: number, data: any) {
-    const product = await this.productRepo.findOne({
-      where: { id: productId },
-      relations: ['variants'],
+  async addProduct(productLineId: number, data: any) {
+    const productLine = await this.productLineRepo.findOne({
+      where: { id: productLineId },
+      relations: ['products'],
     });
 
-    if (!product) {
-      throw new NotFoundException('Product not found');
+    if (!productLine) {
+      throw new NotFoundException('Product Line not found');
     }
 
     // Kiểm tra SKU trùng
-    const existingSku = await this.variantRepo.findOne({
+    const existingSku = await this.productRepo.findOne({
       where: { sku: data.sku },
     });
 
@@ -188,33 +186,33 @@ export class ProductService {
       throw new BadRequestException('SKU already exists');
     }
 
-    const variant = this.variantRepo.create({
+    const product = this.productRepo.create({
       sku: data.sku,
       color: data.color,
       price: data.price, 
-      stock: data.stock ?? 0,
-      product,
+      imageUrl: data.imageUrl,
+      productLine,
     });
 
-    return this.variantRepo.save(variant);
+    return this.productRepo.save(product);
   }
 
   // =============================
-  // FIND ONE
+  // FIND ONE PRODUCT LINE
   // =============================
-  async findOne(id: number) {
-    const product = await this.productRepo.findOne({
+  async findOneProductLine(id: number) {
+    const product = await this.productLineRepo.findOne({
       where: { id },
       relations: [
         'category',
         'brand',
         'images',
-        'variants',
+        'products',
       ],
     });
 
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Product Line not found');
     }
 
     return product;
@@ -223,8 +221,8 @@ export class ProductService {
   // =============================
   // UPDATE
   // =============================
-  async update(id: number, data: any) {
-    const product = await this.findOne(id);
+  async updateProductLine(id: number, data: any) {
+    const product = await this.findOneProductLine(id);
 
     Object.assign(product, data);
 
@@ -234,50 +232,50 @@ export class ProductService {
   // =============================
   // DELETE
   // =============================
-  async remove(id: number) {
-    const product = await this.findOne(id);
-    return this.productRepo.remove(product);
+  async removeProductLine(id: number) {
+    const product = await this.findOneProductLine(id);
+    return this.productLineRepo.remove(product);
   }
 
   // =============================
   // STOCK IN
   // =============================
-  async stockIn(variantId: number, quantity: number) {
-    const variant = await this.variantRepo.findOne({
-      where: { id: variantId },
-    });
+  // async stockIn(productId: number, quantity: number) {
+  //   const variant = await this.productRepo.findOne({
+  //     where: { id: productId },
+  //   });
 
-    if (!variant) {
-      throw new NotFoundException('Product in variant not found');
-    }
+  //   if (!variant) {
+  //     throw new NotFoundException('Product in variant not found');
+  //   }
 
-    variant.stock += quantity;
-    await this.variantRepo.save(variant);
+  //   variant.stock += quantity;
+  //   await this.variantRepo.save(variant);
 
-    return { message: 'Stock added successfully' };
-  }
+  //   return { message: 'Stock added successfully' };
+  // }
 
-  // =============================
-  // STOCK OUT
-  // =============================
-  async stockOut(variantId: number, quantity: number) {
-    const variant = await this.variantRepo.findOne({
-      where: { id: variantId },
-    });
+  // // =============================
+  // // STOCK OUT
+  // // =============================
+  // async stockOut(variantId: number, quantity: number) {
+  //   const variant = await this.variantRepo.findOne({
+  //     where: { id: variantId },
+  //   });
 
-    if (!variant) {
-      throw new NotFoundException('Product in variant not found');
-    }
+  //   if (!variant) {
+  //     throw new NotFoundException('Product in variant not found');
+  //   }
 
-    if (variant.stock < quantity) {
-      throw new BadRequestException('Not enough stock');
-    }
+  //   if (variant.stock < quantity) {
+  //     throw new BadRequestException('Not enough stock');
+  //   }
 
-    variant.stock -= quantity;
-    await this.variantRepo.save(variant);
+  //   variant.stock -= quantity;
+  //   await this.variantRepo.save(variant);
 
-    return { message: 'Stock out successfully' };
-  }
+  //   return { message: 'Stock out successfully' };
+  // }
 
 
 }

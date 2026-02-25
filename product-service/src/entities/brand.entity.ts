@@ -4,7 +4,7 @@ import {
   Column,
   OneToMany,
 } from 'typeorm';
-import { Product } from './product.entity';
+import { ProductLine } from './product-line.entity';
 
 @Entity('brands')
 export class Brand {
@@ -21,6 +21,6 @@ export class Brand {
   @Column({ nullable: true })
   logo: string;
 
-  @OneToMany(() => Product, product => product.brand)
-  products: Product[];
+  @OneToMany(() => ProductLine, product => product.brand)
+  productLines: ProductLine[];
 }

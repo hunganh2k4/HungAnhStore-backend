@@ -19,10 +19,10 @@ export class ProductService {
       this.configService.get<string>('PRODUCT_SERVICE_URL')!;
   }
 
-  async findAll() {
+  async findAllProductLines() {
     try {
       const res = await firstValueFrom(
-        this.http.get(`${this.productUrl}/products`),
+        this.http.get(`${this.productUrl}/product-lines`),
       );
       return res.data;
     } catch (error) {
@@ -30,10 +30,10 @@ export class ProductService {
     }
   }
 
-  async findOne(id: string) {
+  async findOneProductLine(id: string) {
     try {
       const res = await firstValueFrom(
-        this.http.get(`${this.productUrl}/products/${id}`),
+        this.http.get(`${this.productUrl}/product-lines/${id}`),
       );
       return res.data;
     } catch (error) {

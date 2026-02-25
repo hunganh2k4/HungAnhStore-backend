@@ -12,50 +12,50 @@ import {
 
 import { ProductService } from '../services/product.service';
 
-@Controller('products')
+@Controller('product-lines')
 export class ProductController {
   constructor(private readonly service: ProductService) {}
 
-  // CREATE
+  // CREATE ONE PRODUCT LINE
   @Post()
-  create(@Body() body: any) {
-    return this.service.create(body);
+  createProductLine(@Body() body: any) {
+    return this.service.createProductLine(body);
   }
 
-  // GET ALL
+  // GET ALL PRODUCT LINES
   @Get()
-  findAll(@Query() query: any) {
-    return this.service.findAll(query);
+  findAllProductLine(@Query() query: any) {
+    return this.service.findAllProductLine(query);
   }
 
-  // GET ONE
+  // GET ONE PRODUCT LINE
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.service.findOne(id);
+  findOneProductLine(@Param('id', ParseIntPipe) id: number) {
+    return this.service.findOneProductLine(id);
   }
 
-  // UPDATE
+  // UPDATE PRODUCT LINE
   @Put(':id')
-  update(
+  updateProductLine(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: any,
   ) {
-    return this.service.update(id, body);
+    return this.service.updateProductLine(id, body);
   }
 
-  // DELETE
+  // DELETE PRODUCT LINE
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.service.remove(id);
+  removeProductLine(@Param('id', ParseIntPipe) id: number) {
+    return this.service.removeProductLine(id);
   }
 
 
-  // ADD VARIANT
-  @Post(':id/variants')
-  addVariant(
+  // ADD ONE PRODUCT TO PRODUCT LINE
+  @Post(':id/products')
+  addProduct(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: any,
   ) {
-    return this.service.addVariant(id, body);
+    return this.service.addProduct(id, body);
   }
 }

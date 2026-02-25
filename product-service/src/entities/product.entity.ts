@@ -5,10 +5,7 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
-import { Category } from './category.entity';
-import { Brand } from './brand.entity';
-import { ProductImage } from './product-image.entity';
-import { ProductVariant } from './product-variant.entity';
+import { ProductLine } from './product-line.entity';
 // import { StockMovement } from './stock-movement.entity';
 
 @Entity('products')
@@ -18,26 +15,22 @@ export class Product {
   id: number;
 
   @Column()
-  name: string;
+  sku: string;
 
-  @Column({ unique: true })
-  slug: string; // iphone-17-256gb
+  @Column()
+  color: string;  
 
-  @Column('text', { nullable: true })
-  description: string;
+  @Column('decimal')
+  price: number;
 
-  @ManyToOne(() => Category, category => category.products)
-  category: Category;
+  @Column({ nullable: true })
+  imageUrl: string;
 
-  @ManyToOne(() => Brand, brand => brand.products)
-  brand: Brand;
+  @ManyToOne(() => ProductLine, productLine => productLine.products, {
+    onDelete: 'CASCADE',
+  })
+  productLine: ProductLine;
 
-  @OneToMany(() => ProductImage, image => image.product)
-  images: ProductImage[];
-
-  @OneToMany(() => ProductVariant, variant => variant.product)
-  variants: ProductVariant[];
-
-  // @OneToMany(() => StockMovement, movement => movement.product)
+  // @OneToMany(() => StockMovement, movement => movement.variant)
   // movements: StockMovement[];
 }

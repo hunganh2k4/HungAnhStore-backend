@@ -4,7 +4,7 @@ import {
   Column,
   ManyToOne,
 } from 'typeorm';
-import { Product } from './product.entity';
+import { ProductLine } from './product-line.entity';
 
 @Entity('product_images')
 export class ProductImage {
@@ -18,8 +18,8 @@ export class ProductImage {
   @Column({ default: false })
   isMain: boolean;
 
-  @ManyToOne(() => Product, product => product.images, {
+  @ManyToOne(() => ProductLine, productLine => productLine.images, {
     onDelete: 'CASCADE',
   })
-  product: Product;
+  productLine: ProductLine;
 }

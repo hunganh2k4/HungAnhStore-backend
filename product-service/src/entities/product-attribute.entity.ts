@@ -4,7 +4,7 @@ import {
   Column,
   ManyToOne,
 } from 'typeorm';
-import { Product } from './product.entity';
+import { ProductLine } from './product-line.entity';
 
 @Entity('product_attributes')
 export class ProductAttribute {
@@ -18,8 +18,8 @@ export class ProductAttribute {
   @Column()
   value: string; // 16GB, i7...
 
-  @ManyToOne(() => Product, product => product.id, {
+  @ManyToOne(() => ProductLine, productLine => productLine.id,{
     onDelete: 'CASCADE',
   })
-  product: Product;
+  productLine: ProductLine;
 }

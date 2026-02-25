@@ -14,22 +14,22 @@ export class VariantController {
   // =============================
   // STOCK IN
   // =============================
-  @Post(':variantId/stock-in')
-  stockIn(
-    @Param('variantId', ParseIntPipe) variantId: number,
-    @Body('quantity') quantity: number,
-  ) {
-    return this.service.stockIn(variantId, quantity);
-  }
+  // @Post(':variantId/stock-in')
+  // stockIn(
+  //   @Param('variantId', ParseIntPipe) variantId: number,
+  //   @Body('quantity') quantity: number,
+  // ) {
+  //   return this.service.stockIn(variantId, quantity);
+  // }
 
-  // =============================
-  // STOCK OUT
-  // =============================
-  @Post(':variantId/stock-out')
-  stockOut(
-    @Param('variantId', ParseIntPipe) variantId: number,
-    @Body('quantity') quantity: number,
-  ) {
-    return this.service.stockOut(variantId, quantity);
-  }
+  // // =============================
+  // // STOCK OUT
+  // // =============================
+  // @Post(':variantId/stock-out')
+  // stockOut(
+  //   @Param('variantId', ParseIntPipe) variantId: number,
+  //   @Body('quantity') quantity: number,
+  // ) {
+  //   return this.service.stockOut(variantId, quantity);
+  // }
 }

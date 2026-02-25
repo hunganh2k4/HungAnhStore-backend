@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Product } from './entities/product.entity';
+import { ProductLine } from './entities/product-line.entity';
 import { Category } from './entities/category.entity';
 import { Brand } from './entities/brand.entity';
 import { ProductImage } from './entities/product-image.entity';
-import { ProductVariant } from './entities/product-variant.entity';
+import { Product } from './entities/product.entity';
 import { ProductAttribute } from './entities/product-attribute.entity';
-import { StockMovement } from './entities/stock-movement.entity';
+// import { StockMovement } from './entities/stock-movement.entity';
 
 import { ProductService } from './services/product.service';
 import { ProductController } from './controller/product.controller';
@@ -20,9 +20,9 @@ import { VariantController } from './controller/variant.controller';
       Category,
       Brand,
       ProductImage,
-      ProductVariant,
+      ProductLine,
       ProductAttribute,
-      StockMovement,
+      // StockMovement,
     ]),
   ],
   controllers: [ProductController, VariantController],
