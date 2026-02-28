@@ -3,3 +3,4 @@ AUTHSERVICE chạy ở port 4001
 PRODUCTSERVICE chạy ở port 4002
 USERSERVICE chạy ở port 4003
 INVENTORY chạy ở port 4004
+ORDERSERVICE chạy ở port 4005

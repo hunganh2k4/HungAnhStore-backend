@@ -302,7 +302,7 @@ export class InventoryService {
         StockType.RELEASE,
       );
       if (released) {
-        throw new BadRequestException('Order already cancelled');
+        throw new BadRequestException('Cannot release stock because it has already been confirmed (shipped)');
       }
 
       const reservedMovement = await this.getReserveMovement(

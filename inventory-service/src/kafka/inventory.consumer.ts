@@ -17,8 +17,8 @@ export class InventoryConsumer {
     await this.inventoryService.handleRelease(data);
   }
 
-  @EventPattern('order.paid')
-  async handleOrderPaid(@Payload() data: any) {
+  @EventPattern('order.shipped')
+  async handleOrderShipped(@Payload() data: any) {
     await this.inventoryService.handleConfirm(data);
   }
 }
