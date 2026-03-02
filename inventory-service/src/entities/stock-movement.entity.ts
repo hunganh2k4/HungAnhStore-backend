@@ -17,7 +17,7 @@ export enum StockType {
 @Entity('stock_movements')
 @Index(['productId'])
 @Index(['orderId'])
-@Index(['orderId', 'type'], { unique: true })
+@Index(['orderId', 'productId', 'type'], { unique: true })  
 export class StockMovement {
 
   @PrimaryGeneratedColumn()
