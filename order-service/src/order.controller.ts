@@ -14,15 +14,14 @@ export class OrderController {
 
   // CREATE ORDER
   @Post()
-  async create(
-    @Body()
-    body: {
+  create(@Body() body: {
+    items: {
       productId: number;
       quantity: number;
-      totalPrice: number;
-      paymentMethod: PaymentMethod;
-    },
-  ) {
+      price: number;
+    }[];
+    paymentMethod: PaymentMethod;
+  }) {
     return this.orderService.create(body);
   }
 

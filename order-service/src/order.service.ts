@@ -12,6 +12,7 @@ import {
   PaymentMethod,
   PaymentStatus,
 } from './entities/order.entity';
+import { OrderItem } from './entities/orderItem.entity';
 
 @Injectable()
 export class OrderService {
@@ -39,18 +40,30 @@ export class OrderService {
     });
   }
 
+  private mapItems(order: Order) {
+    return order.items.map(i => ({
+      productId: i.productId,
+      quantity: i.quantity,
+    }));
+  }
+
   // ================================
   // ========== CREATE ORDER ========
   // ================================
 
   async create(dto: {
-    productId: number;
-    quantity: number;
-    totalPrice: number;
+    items: { productId: number; quantity: number; price: number }[];
     paymentMethod: PaymentMethod;
   }) {
+    const totalPrice = dto.items.reduce(
+      (sum, i) => sum + i.quantity * i.price,
+      0,
+    );
+
     const order = this.orderRepo.create({
-      ...dto,
+      items: dto.items as OrderItem[],
+      totalPrice,
+      paymentMethod: dto.paymentMethod,
       status: OrderStatus.CREATED,
       paymentStatus: PaymentStatus.PENDING,
     });
@@ -59,8 +72,7 @@ export class OrderService {
 
     await this.publish('order.created', {
       orderId: order.id,
-      productId: order.productId,
-      quantity: order.quantity,
+      items: this.mapItems(order),
     });
 
     return order;
@@ -73,6 +85,7 @@ export class OrderService {
   async handleInventoryReserved(data: any) {
     const order = await this.orderRepo.findOne({
       where: { id: data.orderId },
+      relations: ['items'],
     });
     if (!order) return;
 
@@ -110,6 +123,7 @@ export class OrderService {
     });
     if (!order) return;
 
+    console.log('Inventory reserve failed for order', order.id, 'reason:', data.reason);
     order.status = OrderStatus.CANCELLED;
     await this.orderRepo.save(order);
   }
@@ -121,10 +135,27 @@ export class OrderService {
   async handlePaymentSuccess(data: any) {
     const order = await this.orderRepo.findOne({
       where: { id: data.orderId },
+      relations: ['items'],
     });
     if (!order) return;
 
     if (order.paymentStatus === PaymentStatus.SUCCESS) return;
+
+    // 🚨 Nếu đã bị huỷ thì ignore
+  if (order.status === OrderStatus.CANCELLED) {
+    console.log(
+      `Ignore payment success for cancelled order ${order.id}`,
+    );
+    return;
+  }
+
+  // Chỉ xử lý khi đang ở RESERVED
+  if (order.status !== OrderStatus.RESERVED) {
+    console.log(
+      `Unexpected payment success for order ${order.id} in status ${order.status}`,
+    );
+    return;
+  }
 
     order.paymentStatus = PaymentStatus.SUCCESS;
     order.status = OrderStatus.CONFIRMED;
@@ -144,6 +175,7 @@ export class OrderService {
   async handlePaymentFailed(data: any) {
     const order = await this.orderRepo.findOne({
       where: { id: data.orderId },
+      relations: ['items'],
     });
     if (!order) return;
 
@@ -153,8 +185,7 @@ export class OrderService {
 
     await this.publish('order.cancelled', {
       orderId: order.id,
-      productId: order.productId,
-      quantity: order.quantity,
+      items: this.mapItems(order),
     });
   }
 
@@ -191,6 +222,7 @@ export class OrderService {
   async cancel(orderId: string) {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
+      relations: ['items'],
     });
 
     if (!order) {
@@ -221,8 +253,7 @@ export class OrderService {
     ) {
       await this.publish('order.cancelled', {
         orderId: order.id,
-        productId: order.productId,
-        quantity: order.quantity,
+        items: this.mapItems(order),
       });
     }
 
@@ -240,6 +271,7 @@ export class OrderService {
   async markAsShipping(orderId: string) {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
+      relations: ['items'],
     });
 
     if (!order) throw new BadRequestException('Order not found');
@@ -253,8 +285,7 @@ export class OrderService {
     // publish confirm inventory
     await this.publish('order.shipped', {
       orderId: order.id,
-      productId: order.productId,
-      quantity: order.quantity,
+      items: this.mapItems(order),
     });
 
     return order;

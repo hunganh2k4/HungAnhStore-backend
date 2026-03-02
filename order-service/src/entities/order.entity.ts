@@ -1,4 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { OneToMany } from 'typeorm';
+import { OrderItem } from './orderItem.entity';
 
 export enum OrderStatus {
   CREATED = 'CREATED',
@@ -26,11 +28,15 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  productId: number;
+  // @Column()
+  // productId: number;
 
-  @Column()
-  quantity: number;
+  // @Column()
+  // quantity: number;
+   @OneToMany(() => OrderItem, item => item.order, {
+    cascade: true,
+  })
+  items: OrderItem[];
 
   @Column()
   totalPrice: number;
