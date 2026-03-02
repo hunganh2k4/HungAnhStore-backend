@@ -27,6 +27,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/typeorm": "^11.0.0",
     "@types/kafkajs": "^1.8.2",
+    "kafkajs": "^2.2.4",
     "mysql2": "^3.18.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",

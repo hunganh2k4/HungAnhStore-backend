@@ -18,5 +18,7 @@ async function bootstrap() {
   });
 
   await app.startAllMicroservices();
-  await app.listen(4005);
-}
+  await app.listen(process.env.PORT ?? 4005);
+  console.log(`Order service is running on port ${process.env.PORT ?? 4005}`);
+};
+bootstrap();

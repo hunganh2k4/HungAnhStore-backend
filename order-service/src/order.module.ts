@@ -9,7 +9,8 @@ import { kafkaConsumerProvider } from './kafka/kafka.consumer.provider';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Order])],
-  providers: [OrderService, OrderConsumer, kafkaConsumerProvider, kafkaProducerProvider],
-  controllers: [OrderController],
+  providers: [OrderService,kafkaProducerProvider],
+  controllers: [OrderController, OrderConsumer],
+  exports: [OrderService],
 })
 export class OrderModule {}

@@ -94,12 +94,24 @@ export class OrderService {
 
     // COD → skip payment → confirm luôn
     if (order.paymentMethod === PaymentMethod.COD) {
-      await this.publish('order.confirm', {
-        orderId: order.id,
-        productId: order.productId,
-        quantity: order.quantity,
-      });
+      // await this.publish('order.confirm', {
+      //   orderId: order.id,
+      //   productId: order.productId,
+      //   quantity: order.quantity,
+      // });
+      order.status = OrderStatus.CONFIRMED;
+      await this.orderRepo.save(order);
     }
+  }
+
+  async handleReserveFailed(data: any) {
+    const order = await this.orderRepo.findOne({
+      where: { id: data.orderId },
+    });
+    if (!order) return;
+
+    order.status = OrderStatus.CANCELLED;
+    await this.orderRepo.save(order);
   }
 
   // ================================
@@ -115,13 +127,14 @@ export class OrderService {
     if (order.paymentStatus === PaymentStatus.SUCCESS) return;
 
     order.paymentStatus = PaymentStatus.SUCCESS;
+    order.status = OrderStatus.CONFIRMED;
     await this.orderRepo.save(order);
 
-    await this.publish('order.confirm', {
-      orderId: order.id,
-      productId: order.productId,
-      quantity: order.quantity,
-    });
+    // await this.publish('order.confirm', {
+    //   orderId: order.id,
+    //   productId: order.productId,
+    //   quantity: order.quantity,
+    // });
   }
 
   // ================================
@@ -138,7 +151,7 @@ export class OrderService {
     order.status = OrderStatus.CANCELLED;
     await this.orderRepo.save(order);
 
-    await this.publish('inventory.release', {
+    await this.publish('order.cancelled', {
       orderId: order.id,
       productId: order.productId,
       quantity: order.quantity,
@@ -154,11 +167,21 @@ export class OrderService {
       where: { id: data.orderId },
     });
     if (!order) return;
-
-    if (order.status === OrderStatus.CONFIRMED) return;
-
-    order.status = OrderStatus.CONFIRMED;
+    order.status = OrderStatus.SHIPPING;
     await this.orderRepo.save(order);
+  }
+
+  async handleConfirmFailed(data: any) {
+    const order = await this.orderRepo.findOne({
+      where: { id: data.orderId },
+    });
+    if (!order) return;
+
+    // nếu đang SHIPPING mà confirm fail
+    if (order.status === OrderStatus.SHIPPING) {
+      order.status = OrderStatus.CONFIRMED;
+      await this.orderRepo.save(order);
+    }
   }
 
   // ================================
@@ -196,7 +219,7 @@ export class OrderService {
       oldStatus === OrderStatus.RESERVED ||
       oldStatus === OrderStatus.CONFIRMED
     ) {
-      await this.publish('inventory.release', {
+      await this.publish('order.cancelled', {
         orderId: order.id,
         productId: order.productId,
         quantity: order.quantity,
@@ -204,6 +227,10 @@ export class OrderService {
     }
 
     return order;
+  }
+
+  async handleReleaseFailed(data: any) {
+    console.error('Release failed:', data);
   }
 
   // ================================
@@ -223,9 +250,16 @@ export class OrderService {
       );
     }
 
-    order.status = OrderStatus.SHIPPING;
-    return this.orderRepo.save(order);
+    // publish confirm inventory
+    await this.publish('order.shipped', {
+      orderId: order.id,
+      productId: order.productId,
+      quantity: order.quantity,
+    });
+
+    return order;
   }
+
 
   async markAsDelivered(orderId: string) {
     const order = await this.orderRepo.findOne({
