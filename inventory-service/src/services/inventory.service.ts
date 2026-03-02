@@ -36,7 +36,7 @@ export class InventoryService {
 
       await this.publish('inventory.reserved', data);
     } catch (err) {
-      await this.publish('inventory.failed', {
+      await this.publish('inventory.reserve.failed', {
         orderId,
         productId,
         quantity,
@@ -53,7 +53,7 @@ export class InventoryService {
 
       await this.publish('inventory.released', data);
     } catch (err) {
-      await this.publish('inventory.failed', {
+      await this.publish('inventory.release.failed', {
         orderId,
         productId,
         quantity,
@@ -70,7 +70,7 @@ export class InventoryService {
 
       await this.publish('inventory.confirmed', data);
     } catch (err) {
-      await this.publish('inventory.failed', {
+      await this.publish('inventory.confirm.failed', {
         orderId,
         productId,
         quantity,
