@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, } from '@nestjs/common';
 import { InventoryService } from '../services/inventory.service';
 
 @Controller('inventory')
@@ -12,5 +12,10 @@ export class InventoryController {
       body.quantity,
       body.reference,
     );
+  }
+  @Get('bulk')
+  async getStockBulk(@Query('ids') ids: string) {
+    const productIds = ids.split(',').map(Number);
+    return this.inventoryService.getStockBulkByProductIds(productIds);
   }
 }

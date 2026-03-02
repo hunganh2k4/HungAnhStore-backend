@@ -13,6 +13,7 @@ import { ProductImage } from '../entities/product-image.entity';
 // import { StockMovement, StockType } from '../entities/stock-movement.entity';
 import { Product } from '../entities/product.entity';
 import { slugify } from '../common/utils/slug.util';
+import axios from 'axios';
 
 @Injectable()
 export class ProductService {
@@ -118,7 +119,8 @@ export class ProductService {
         'images',
         'images.isMain = :isMain',
         { isMain: true },
-      );
+      )
+      .leftJoinAndSelect('product_lines.products', 'products')
 
     // =============================
     // FILTER BRAND BY SLUG
@@ -142,7 +144,7 @@ export class ProductService {
     // SEARCH BY PRODUCT NAME
     // =============================
     if (search) {
-      qb.andWhere('product.name LIKE :search', {
+      qb.andWhere('product_lines.name LIKE :search', {
         search: `%${search}%`,
       });
     }
@@ -154,6 +156,35 @@ export class ProductService {
       .take(limit);
 
     const [data, total] = await qb.getManyAndCount();
+
+    // Lấy tất cả productIds:
+    const productIds = data
+      .flatMap(pl => pl.products)
+      .map(p => p.id);
+    
+    const response = await axios.get(
+      'http://localhost:4004/inventory/bulk',
+      {
+        params: {
+          ids: productIds.join(','),
+        },
+      },
+    );
+
+    const inventories = response.data;
+
+    const stockMap = new Map(
+      inventories.map(inv => [inv.productId, inv.available]),
+    );
+
+    type ProductWithStock = Product & { stock: number };
+
+    data.forEach(pl => {
+      pl.products = pl.products.map(p => ({
+        ...p,
+        stock: stockMap.get(p.id) ?? 0,
+      })) as ProductWithStock[];
+    });
 
     return {
       data,
@@ -201,21 +232,42 @@ export class ProductService {
   // FIND ONE PRODUCT LINE
   // =============================
   async findOneProductLine(id: number) {
-    const product = await this.productLineRepo.findOne({
+    const productLine = await this.productLineRepo.findOne({
       where: { id },
-      relations: [
-        'category',
-        'brand',
-        'images',
-        'products',
-      ],
+      relations: ['category', 'brand', 'images', 'products'],
     });
 
-    if (!product) {
+    if (!productLine) {
       throw new NotFoundException('Product Line not found');
     }
 
-    return product;
+    // Lấy productIds
+    const productIds = productLine.products.map(p => p.id);
+
+    // Gọi inventory-service
+    const response = await axios.get(
+      'http://localhost:4004/inventory/bulk',
+      {
+        params: { ids: productIds.join(',') },
+      },
+    );
+
+    const inventories = response.data;
+
+    const stockMap = new Map(
+      inventories.map(inv => [inv.productId, inv.available]),
+    );
+
+    // Merge stock vào response (KHÔNG sửa entity)
+    const result = {
+      ...productLine,
+      products: productLine.products.map(p => ({
+        ...p,
+        stock: stockMap.get(p.id) ?? 0,
+      })),
+    };
+
+    return result;
   }
 
   // =============================

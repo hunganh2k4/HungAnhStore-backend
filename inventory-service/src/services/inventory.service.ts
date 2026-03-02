@@ -8,6 +8,7 @@ import { Inventory } from '../entities/inventory.entity';
 import { StockMovement, StockType } from '../entities/stock-movement.entity';
 import { Inject } from '@nestjs/common';
 import type { Producer } from 'kafkajs';
+import { In } from 'typeorm';
 
 @Injectable()
 export class InventoryService {
@@ -23,6 +24,20 @@ export class InventoryService {
 
     private dataSource: DataSource,
   ) {}
+
+  async getStockBulkByProductIds(productIds: number[]) {
+    if (!productIds?.length) {
+      return [];
+    }
+
+    const inventories = await this.inventoryRepo.find({
+      where: {
+        productId: In(productIds),
+      },
+    });
+
+    return inventories;
+  }
 
   // ===================================================
   // ================= SAGA HANDLERS ===================
