@@ -3,9 +3,11 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  Unique,
 } from 'typeorm';
 import { ProductLine } from './product-line.entity';
 
+@Unique(['productLine', 'name'])
 @Entity('product_attributes')
 export class ProductAttribute {
 

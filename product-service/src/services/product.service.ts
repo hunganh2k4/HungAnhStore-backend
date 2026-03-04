@@ -234,7 +234,7 @@ export class ProductService {
   async findOneProductLine(id: number) {
     const productLine = await this.productLineRepo.findOne({
       where: { id },
-      relations: ['category', 'brand', 'images', 'products'],
+      relations: ['category', 'brand', 'images', 'products', 'attributes'],
     });
 
     if (!productLine) {

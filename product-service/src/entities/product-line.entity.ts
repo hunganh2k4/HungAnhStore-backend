@@ -9,7 +9,7 @@ import { Category } from './category.entity';
 import { Brand } from './brand.entity';
 import { ProductImage } from './product-image.entity';
 import { Product } from './product.entity';
-// import { StockMovement } from './stock-movement.entity';
+import { ProductAttribute } from './product-attribute.entity';
 
 @Entity('product_lines')
 export class ProductLine {
@@ -38,6 +38,6 @@ export class ProductLine {
   @OneToMany(() => Product, product => product.productLine)
   products: Product[];
 
-  // @OneToMany(() => StockMovement, movement => movement.product)
-  // movements: StockMovement[];
+  @OneToMany(() => ProductAttribute, attr => attr.productLine)
+  attributes: ProductAttribute[];
 }

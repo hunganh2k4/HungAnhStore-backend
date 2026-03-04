@@ -6,7 +6,6 @@ import {
   OneToMany,
 } from 'typeorm';
 import { ProductLine } from './product-line.entity';
-// import { StockMovement } from './stock-movement.entity';
 
 @Entity('products')
 export class Product {
@@ -30,7 +29,4 @@ export class Product {
     onDelete: 'CASCADE',
   })
   productLine: ProductLine;
-
-  // @OneToMany(() => StockMovement, movement => movement.variant)
-  // movements: StockMovement[];
 }
