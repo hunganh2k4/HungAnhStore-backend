@@ -3,6 +3,10 @@ import {
   Post,
   Body,
   Headers,
+  Req,
+  Get,
+  Query,
+  Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.serivce';
 
@@ -16,17 +20,33 @@ export class AuthController {
   }
 
   @Post('login')
-  login(@Body() body: any) {
-    return this.authService.login(body);
+  async login(
+    @Body() body: any,
+    @Res({ passthrough: true }) res: any,
+  ) {
+    const response = await this.authService.login(body);
+
+    if (response?.cookies) {
+      res.setHeader('Set-Cookie', response.cookies);
+    }
+
+    return response?.data;
   }
 
   @Post('refresh')
-  refresh(@Body() body: any) {
-    return this.authService.refresh(body);
+  refresh(@Req() req: any) {
+    // console.log('Received refresh request with cookies:', req.headers.cookie);
+    return this.authService.refresh(req.headers.cookie);
   }
 
   @Post('logout')
   logout(@Headers('authorization') token: string) {
     return this.authService.logout(token);
   }
+
+  @Get('verify')
+  verify(@Query('token') token: string) {
+    return this.authService.verify(token);
+  }
+
 }

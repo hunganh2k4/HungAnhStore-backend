@@ -5,6 +5,8 @@ import {
   Get,
   Query,
   UseGuards,
+  Res,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -34,18 +36,32 @@ export class AuthController {
   // LOGIN
   // ===============================
   @Post('login')
-  login(
+  async login(
     @Body('email') email: string,
     @Body('password') password: string,
+    @Res({ passthrough: true }) response: any,
   ) {
-    return this.authService.login(email, password);
+    const { accessToken, refreshToken } =
+      await this.authService.login(email, password);
+
+    // Set HttpOnly cookie
+    response.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: false, // Set to true in production with HTTPS
+      sameSite: 'strict',
+      path: '/auth/refresh',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+
+    return { accessToken };
   }
 
   // ===============================
   // REFRESH TOKEN
   // ===============================
   @Post('refresh')
-  refresh(@Body('refreshToken') refreshToken: string) {
+  refresh(@Req() req: any) {
+    const refreshToken = req.cookies.refreshToken;
     return this.authService.refresh(refreshToken);
   }
 

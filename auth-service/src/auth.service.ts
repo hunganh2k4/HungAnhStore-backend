@@ -87,6 +87,7 @@ export class AuthService {
   // LOGIN
   // ===============================
   async login(email: string, password: string) {
+    console.log('Login attempt for:', email);
     const { data: user } = await firstValueFrom(
       this.http.get(
         `http://localhost:4003/internal/users/raw/${email}`,
@@ -134,6 +135,9 @@ export class AuthService {
   // REFRESH TOKEN
   // ===============================
   async refresh(refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('No refresh token');
+    }
     try {
       const payload = this.jwtService.verify(
         refreshToken,

@@ -13,7 +13,8 @@ export class MailService {
   });
 
   async sendVerifyEmail(email: string, token: string) {
-    const url = `http://localhost:4001/auth/verify?token=${token}`;
+    // const url = `http://localhost:4000/auth/verify?token=${token}`;
+    const url = `http://localhost:5173/verify-email?token=${token}`;// Frontend URL for email verification
 
     await this.transporter.sendMail({
       from: '"HaStore" <yourgmail@gmail.com>',

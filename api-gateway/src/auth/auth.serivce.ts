@@ -32,20 +32,44 @@ export class AuthService {
 
   async login(body: any) {
     try {
-      const res = await firstValueFrom(
-        this.http.post(`${this.authUrl}/auth/login`, body),
+      const response = await firstValueFrom(
+        this.http.post(`${this.authUrl}/auth/login`, body, {
+          withCredentials: true,
+        }),
       );
-      return res.data;
+
+      const rawCookies = response.headers['set-cookie'];
+
+      let cookies: string[] | undefined;
+
+      if (Array.isArray(rawCookies)) {
+        cookies = rawCookies;
+      }
+
+      return {
+        data: response.data,
+        cookies,
+      };
+
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  async refresh(body: any) {
+  async refresh(cookie: string) {
     try {
       const res = await firstValueFrom(
-        this.http.post(`${this.authUrl}/auth/refresh`, body),
+        this.http.post(
+          `${this.authUrl}/auth/refresh`,
+          {},
+          {
+            headers: {
+              Cookie: cookie, 
+            },
+          },
+        ),
       );
+
       return res.data;
     } catch (error) {
       this.handleError(error);
@@ -84,6 +108,20 @@ export class AuthService {
           },
         ),
       );
+      return res.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async verify(token: string) {
+    try {
+      const res = await firstValueFrom(
+        this.http.get(`${this.authUrl}/auth/verify`, {
+          params: { token },
+        }),
+      );
+
       return res.data;
     } catch (error) {
       this.handleError(error);
