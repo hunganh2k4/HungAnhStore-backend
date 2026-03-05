@@ -1,33 +1,37 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { v2 as Cloudinary } from 'cloudinary';
+import {
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 @Injectable()
 export class CloudinaryService {
+
   constructor(
-    @Inject('CLOUDINARY') private cloudinary: typeof Cloudinary,
+    @Inject('CLOUDINARY')
+    private cloudinary: typeof Cloudinary,
   ) {}
 
   async uploadFile(file: Express.Multer.File) {
-    const resourceType = file.mimetype.startsWith('video')
-      ? 'video'
-      : 'image';
 
     return new Promise((resolve, reject) => {
+
       this.cloudinary.uploader
         .upload_stream(
           {
-            resource_type: resourceType,
-            folder: 'hastore',
+            folder: 'hastore/temp',
           },
           (error, result) => {
+
             if (error || !result) {
-              return reject(error || new Error('Upload failed'));
+              return reject(error);
             }
 
             resolve({
               url: result.secure_url,
-              public_id: result.public_id,
-              type: resourceType,
+              publicId: result.public_id,
+              type: result.resource_type,
             });
           },
         )
@@ -35,9 +39,41 @@ export class CloudinaryService {
     });
   }
 
-  async deleteFile(publicId: string) {
-    return this.cloudinary.uploader.destroy(publicId, {
-      resource_type: 'image',
-    });
+  async moveFromTemp(publicId: string) {
+
+    const newPublicId = publicId.replace(
+      'hastore/temp',
+      'hastore/used',
+    );
+
+    try {
+      const result = await this.cloudinary.uploader.rename(
+        publicId,
+        newPublicId,
+      );
+
+      return {
+        url: result.secure_url,
+        publicId: result.public_id,
+      };
+
+    } catch (error) {
+
+      if (error?.message?.includes('Resource not found')) {
+        throw new NotFoundException(
+          `Media ${publicId} not found in Cloudinary`,
+        );
+      }
+
+      // lỗi khác
+      throw new InternalServerErrorException(
+        `Cloudinary error: ${error.message}`,
+      );
+    }
+  }
+
+  async delete(publicId: string) {
+
+    return this.cloudinary.uploader.destroy(publicId);
   }
 }
