@@ -8,10 +8,14 @@ import { ProductImage } from './entities/product-image.entity';
 import { Product } from './entities/product.entity';
 import { ProductAttribute } from './entities/product-attribute.entity';
 // import { StockMovement } from './entities/stock-movement.entity';
+import { Review } from './entities/review.entity';
+import { ReviewMedia } from './entities/review-media.entity';
 
 import { ProductService } from './services/product.service';
+import { ReviewService } from './services/review.service';
 import { ProductController } from './controller/product.controller';
 import { VariantController } from './controller/variant.controller';
+import { ReviewController } from './controller/review.controller';
 
 @Module({
   imports: [
@@ -23,10 +27,12 @@ import { VariantController } from './controller/variant.controller';
       ProductLine,
       ProductAttribute,
       // StockMovement,
+      Review,
+      ReviewMedia,
     ]),
   ],
-  controllers: [ProductController, VariantController],
-  providers: [ProductService],
-  exports: [ProductService], 
+  controllers: [ProductController, VariantController, ReviewController],
+  providers: [ProductService, ReviewService],
+  exports: [ProductService, ReviewService], 
 })
 export class ProductModule {}
