@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from './user.module';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -25,5 +26,6 @@ import { UserModule } from './user.module';
 
     UserModule,
   ],
+  providers: [JwtStrategy],
 })
 export class AppModule {};

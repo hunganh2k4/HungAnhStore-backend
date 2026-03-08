@@ -74,4 +74,12 @@ export class AuthController {
   logout(@CurrentUser() user: { userId: string }) {
     return this.authService.logout(user.userId);
   }
+
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async me(@CurrentUser() user: { userId: string }) {
+    // Gọi user-service lấy thông tin user công khai (không trả password)
+    return this.authService.getUserProfile(user.userId);
+  }
 }

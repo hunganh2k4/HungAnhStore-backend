@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { User } from '../entities/user.entity';
+import { console } from 'inspector';
 
 @Injectable()
 export class UserService {
@@ -26,10 +27,12 @@ export class UserService {
       throw new BadRequestException('Email already exists');
     }
 
+    console.log('Creating user with name:', name);
+
     const user = this.repo.create({
       email,
       password,
-      name,
+      name: name,
       avatar: null,
       enable: false,
       deleted: false,
@@ -47,6 +50,7 @@ export class UserService {
     const user = await this.repo.findOne({
       where: { email, deleted: false },
     });
+    console.log('Finding user by email:', email, 'Found:', !!user);
 
     if (!user) return null;
 
@@ -64,6 +68,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    console.log('Finding user by email:', email, 'Found:', !!user);
 
     return user;
   }
@@ -84,6 +89,20 @@ export class UserService {
 
     return { message: 'User enabled' };
   }
+
+  async findById(id: string) {
+    const user = await this.repo.findOne({
+      where: { id, deleted: false },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.removePassword(user); // trả về không có password
+  }
+  
+
   private removePassword(user: User) {
     const { password, ...result } = user;
     return result;

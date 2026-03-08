@@ -16,7 +16,7 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
+  @Column({ type: 'nvarchar'})
   name: string;
   
   @Column({ type: 'nvarchar', nullable: true })

@@ -23,34 +23,41 @@ export class AuthService {
 
   async register(email: string, password: string, name: string) {
     try {
-      // 1️⃣ Hash password
+      // Hash password
       const hashed = await bcrypt.hash(password, 10);
 
-      // 2️⃣ Gọi user-service
+      // Gọi user-service
+      const systemToken = this.generateSystemToken();
+
       const { data: user } = await firstValueFrom(
         this.http.post(
-          'http://localhost:4003/internal/users',
+          'http://localhost:4003/users', // route public
           {
             email,
             password: hashed,
             name,
           },
+          {
+            headers: {
+              Authorization: `Bearer ${systemToken}`,
+            },
+          },
         ),
       );
 
-      // 3️⃣ Tạo verify token
+      // Tạo verify token
       const verifyToken = this.jwtService.sign({
         userId: user.id,
       });
 
-      // 4️⃣ Gửi mail (KHÔNG await để tránh chậm)
+      // Gửi mail (KHÔNG await để tránh chậm)
       this.mailService
         .sendVerifyEmail(email, verifyToken)
         .catch((err) =>
           console.error('Send mail error:', err),
         );
 
-      // 5️⃣ Trả về ngay
+      // Trả về ngay
       return {
         message:
           'Register success. Please check email to verify.',
@@ -70,9 +77,17 @@ export class AuthService {
     try {
       const payload = this.jwtService.verify(token);
 
+      const systemToken = this.generateSystemToken();
+
       await firstValueFrom(
         this.http.put(
-          `http://localhost:4003/internal/users/${payload.userId}/enable`,
+          `http://localhost:4003/users/${payload.userId}/enable`, 
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${systemToken}`,
+            },
+          },
         ),
       );
 
@@ -88,11 +103,11 @@ export class AuthService {
   // LOGIN
   // ===============================
   async login(email: string, password: string) {
-    console.log('Login attempt for:', email);
+    const systemToken = this.generateSystemToken();
     const { data: user } = await firstValueFrom(
-      this.http.get(
-        `http://localhost:4003/internal/users/raw/${email}`,
-      ),
+      this.http.get(`http://localhost:4003/users/raw/${email}`, {
+        headers: { Authorization: `Bearer ${systemToken}` },
+      }),
     );
 
     if (!user) {
@@ -104,6 +119,13 @@ export class AuthService {
         'Please verify email first',
       );
     }
+
+    if (!user.password) {
+      throw new UnauthorizedException(
+        'Please send password first',
+      );
+    }
+
 
     const isMatch = await bcrypt.compare(
       password,
@@ -134,7 +156,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         avatar: user.avatar
-  }
+      }
     };
   }
 
@@ -181,6 +203,14 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
+  async getUserProfile(userId: string) {
+    const { data: user } = await firstValueFrom(
+      this.http.get(`http://localhost:4003/users/${userId}`) 
+    );
+
+    return user;
+  }
+
 
 
   // ===============================
@@ -204,6 +234,16 @@ export class AuthService {
         expiresIn:
           process.env.REFRESH_TOKEN_EXPIRES || '7d' as any,
       },
+    );
+  }
+
+  private generateSystemToken() {
+    return this.jwtService.sign(
+      { 
+        userId: 'SYSTEM',
+        role: 'SYSTEM' 
+      },
+      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '1h' },
     );
   }
 }
