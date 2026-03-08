@@ -24,6 +24,7 @@ export class AuthController {
     return this.authService.register(
       dto.email,
       dto.password,
+      dto.name,
     );
   }
 
@@ -41,7 +42,7 @@ export class AuthController {
     @Body('password') password: string,
     @Res({ passthrough: true }) response: any,
   ) {
-    const { accessToken, refreshToken } =
+    const { accessToken, refreshToken, user } =
       await this.authService.login(email, password);
 
     // Set HttpOnly cookie
@@ -53,7 +54,7 @@ export class AuthController {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    return { accessToken };
+    return { accessToken ,user };
   }
 
   // ===============================

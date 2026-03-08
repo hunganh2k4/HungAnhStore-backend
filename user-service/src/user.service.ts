@@ -17,7 +17,7 @@ export class UserService {
   // ===============================
   // CREATE USER (internal)
   // ===============================
-  async createUser(email: string, password: string) {
+  async createUser(email: string, password: string, name: string) {
     const existing = await this.repo.findOne({
       where: { email },
     });
@@ -29,6 +29,8 @@ export class UserService {
     const user = this.repo.create({
       email,
       password,
+      name,
+      avatar: null,
       enable: false,
       deleted: false,
     });

@@ -18,6 +18,7 @@ export class UserController {
     return this.userService.createUser(
       body.email,
       body.password,
+      body.name,
     );
   }
 

@@ -21,7 +21,7 @@ export class AuthService {
 
   ) {}
 
-  async register(email: string, password: string) {
+  async register(email: string, password: string, name: string) {
     try {
       // 1️⃣ Hash password
       const hashed = await bcrypt.hash(password, 10);
@@ -33,6 +33,7 @@ export class AuthService {
           {
             email,
             password: hashed,
+            name,
           },
         ),
       );
@@ -128,6 +129,12 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        avatar: user.avatar
+  }
     };
   }
 

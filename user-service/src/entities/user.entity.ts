@@ -16,6 +16,12 @@ export class User {
   @Column()
   password: string;
 
+  @Column()
+  name: string;
+  
+  @Column({ type: 'nvarchar', nullable: true })
+  avatar: string | null;
+
   @Column({ default: false })
   enable: boolean;
 
