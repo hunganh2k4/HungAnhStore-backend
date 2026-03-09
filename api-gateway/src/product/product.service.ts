@@ -101,6 +101,15 @@ export class ProductService {
     }
   }
 
+  async findBySlug(slug: string) {
+    const response =  await firstValueFrom(
+        this.http.get(
+          `${this.productUrl}/product-lines/slug/${slug}`,
+        ),
+      );
+    return response.data;
+  }
+
   // SIMPLE ERROR HANDLER
   private handleError(error: any): never {
     if (error.response) {

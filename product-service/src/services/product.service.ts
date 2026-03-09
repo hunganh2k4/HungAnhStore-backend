@@ -329,5 +329,43 @@ export class ProductService {
   //   return { message: 'Stock out successfully' };
   // }
 
+  async findProductLineBySlug(slug: string) {
+    const productLine = await this.productLineRepo.findOne({
+      where: { slug },
+      relations: ['category', 'brand', 'images', 'products', 'attributes'],
+    });
+
+    if (!productLine) {
+      throw new NotFoundException('Product Line not found');
+    }
+
+    const productIds = productLine.products.map(p => p.id);
+
+    // gọi inventory-service
+    const response = await axios.get(
+      'http://localhost:4004/inventory/bulk',
+      {
+        params: {
+          ids: productIds.join(','),
+        },
+      },
+    );
+
+    const inventories = response.data;
+
+    const stockMap = new Map(
+      inventories.map(inv => [inv.productId, inv.available]),
+    );
+
+    const result = {
+      ...productLine,
+      products: productLine.products.map(p => ({
+        ...p,
+        stock: stockMap.get(p.id) ?? 0,
+      })),
+    };
+
+    return result;
+  }
 
 }

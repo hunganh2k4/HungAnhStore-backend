@@ -27,6 +27,12 @@ export class ProductController {
     return this.productService.findAllProductLine(query);
   }
 
+  
+  @Get('slug/:slug')
+  findBySlug(@Param('slug') slug: string) {
+    return this.productService.findBySlug(slug);
+  }
+
   // GET ONE PRODUCT LINE
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -56,4 +62,5 @@ export class ProductController {
   ) {
     return this.productService.addProduct(id, body);
   }
+
 }

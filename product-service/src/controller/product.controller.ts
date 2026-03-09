@@ -58,4 +58,9 @@ export class ProductController {
   ) {
     return this.service.addProduct(id, body);
   }
+
+  @Get('slug/:slug')
+  findBySlug(@Param('slug') slug: string) {
+    return this.service.findProductLineBySlug(slug);
+  }
 }
