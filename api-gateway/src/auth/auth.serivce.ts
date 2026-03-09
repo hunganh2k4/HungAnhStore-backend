@@ -20,18 +20,18 @@ export class AuthService {
   }
 
   async register(body: any) {
-    try {
+    // try {
       const res = await firstValueFrom(
         this.http.post(`${this.authUrl}/auth/register`, body),
       );
       return res.data;
-    } catch (error) {
-      this.handleError(error);
-    }
+    // } catch (error) {
+    //   this.handleError(error);
+    // }
   }
 
   async login(body: any) {
-    try {
+    // try {
       const response = await firstValueFrom(
         this.http.post(`${this.authUrl}/auth/login`, body, {
           withCredentials: true,
@@ -51,13 +51,13 @@ export class AuthService {
         cookies,
       };
 
-    } catch (error) {
-      this.handleError(error);
-    }
+    // } catch (error) {
+    //   this.handleError(error);
+    // }
   }
 
   async refresh(cookie: string) {
-    try {
+    // try {
       const res = await firstValueFrom(
         this.http.post(
           `${this.authUrl}/auth/refresh`,
@@ -71,13 +71,13 @@ export class AuthService {
       );
 
       return res.data;
-    } catch (error) {
-      this.handleError(error);
-    }
+    // } catch (error) {
+    //   this.handleError(error);
+    // }
   }
 
   async logout(token: string) {
-    try {
+    // try {
       const res = await firstValueFrom(
         this.http.post(
           `${this.authUrl}/auth/logout`,
@@ -90,9 +90,9 @@ export class AuthService {
         ),
       );
       return res.data;
-    } catch (error) {
-      this.handleError(error);
-    }
+    // } catch (error) {
+    //   this.handleError(error);
+    // }
   }
 
   async validate(token: string) {
@@ -126,6 +126,19 @@ export class AuthService {
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  async getProfile(authHeader: string) {
+    // Gọi thẳng Auth Service
+    const { data } = await firstValueFrom(
+      this.http.get(`${this.authUrl}/auth/me`, {
+        headers: {
+          Authorization: authHeader, 
+        },
+      }),
+    );
+
+    return data; // Trả về frontend
   }
 
   private handleError(error: any): never {

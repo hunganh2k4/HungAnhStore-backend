@@ -204,8 +204,12 @@ export class AuthService {
   }
 
   async getUserProfile(userId: string) {
+    const systemToken = this.generateSystemToken();
+
     const { data: user } = await firstValueFrom(
-      this.http.get(`http://localhost:4003/users/${userId}`) 
+      this.http.get(`http://localhost:4003/users/${userId}`, {
+        headers: { Authorization: `Bearer ${systemToken}` },
+      }),
     );
 
     return user;

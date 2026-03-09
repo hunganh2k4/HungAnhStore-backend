@@ -49,4 +49,10 @@ export class AuthController {
     return this.authService.verify(token);
   }
 
+  @Get('me')
+  async me(@Headers('authorization') authHeader: string) {
+    // Chuyển token lên Auth Service
+    return this.authService.getProfile(authHeader);
+  }
+
 }

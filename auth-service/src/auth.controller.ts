@@ -54,7 +54,7 @@ export class AuthController {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    return { accessToken ,user };
+    return { accessToken , user };
   }
 
   // ===============================
@@ -79,6 +79,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async me(@CurrentUser() user: { userId: string }) {
+    console.log('Getting profile for user ID:', user.userId);
     // Gọi user-service lấy thông tin user công khai (không trả password)
     return this.authService.getUserProfile(user.userId);
   }

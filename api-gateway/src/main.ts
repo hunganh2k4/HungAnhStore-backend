@@ -1,10 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { GlobalExceptionFilter } from './common/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
+
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   app.enableCors({
     origin: ['http://localhost:5173',process.env.FRONTEND_URL,],
