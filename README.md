@@ -5,3 +5,4 @@ USERSERVICE chạy ở port 4003
 INVENTORY chạy ở port 4004
 ORDERSERVICE chạy ở port 4005
 MEDIASERVICE chạy ở port 4006
+CARTSERVICE chạy ở port 4007 
