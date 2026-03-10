@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-import { OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+
 import { OrderItem } from './orderItem.entity';
 
 export enum OrderStatus {
@@ -49,4 +49,13 @@ export class Order {
 
   @Column({ type: 'enum', enum: PaymentStatus })
   paymentStatus: PaymentStatus;
+
+  @Column()
+  userId: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

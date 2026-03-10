@@ -4,13 +4,19 @@ import {
   Body,
   Param,
   Patch,
+  UseGuards,
+  Get,
+  Req
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { PaymentMethod } from './entities/order.entity';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+
 
 @Controller('orders')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(private readonly orderService: OrderService) { }
 
   // CREATE ORDER
   @Post()
@@ -21,8 +27,11 @@ export class OrderController {
       price: number;
     }[];
     paymentMethod: PaymentMethod;
-  }) {
-    return this.orderService.create(body);
+  }, @Req() req: any) {
+    // If we use JwtAuthGuard, we can extract from req.user
+    // But since create order might not be strictly guarded yet, we check conditionally:
+    const userId = req.user?.userId;
+    return this.orderService.create({ ...body, userId });
   }
 
   // CANCEL ORDER
@@ -41,5 +50,25 @@ export class OrderController {
   @Patch(':id/deliver')
   async deliver(@Param('id') id: string) {
     return this.orderService.markAsDelivered(id);
+  }
+
+  // ================================
+  // GET ALL ORDERS OF USER
+  // ================================
+  @UseGuards(JwtAuthGuard)
+  @Get('my-orders')
+  async getMyOrders(@CurrentUser() user: { userId: string }) {
+    return this.orderService.getOrdersByUser(user.userId);
+  }
+
+  // ================================
+  // GET ORDER DETAIL
+  // ================================
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async getDetail(@Param('id') id: string, @Req() req: any) {
+    const user = req.user;
+
+    return this.orderService.getOrderDetail(id, user.userId);
   }
 }

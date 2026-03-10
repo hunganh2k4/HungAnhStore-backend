@@ -22,7 +22,7 @@ export class OrderService {
 
     @Inject('KAFKA_PRODUCER')
     private producer: Producer,
-  ) {}
+  ) { }
 
   // ================================
   // ========== PUBLISHER ===========
@@ -54,6 +54,7 @@ export class OrderService {
   async create(dto: {
     items: { productId: number; quantity: number; price: number }[];
     paymentMethod: PaymentMethod;
+    userId: string;
   }) {
     const totalPrice = dto.items.reduce(
       (sum, i) => sum + i.quantity * i.price,
@@ -66,6 +67,7 @@ export class OrderService {
       paymentMethod: dto.paymentMethod,
       status: OrderStatus.CREATED,
       paymentStatus: PaymentStatus.PENDING,
+      userId: dto.userId,
     });
 
     await this.orderRepo.save(order);
@@ -142,20 +144,20 @@ export class OrderService {
     if (order.paymentStatus === PaymentStatus.SUCCESS) return;
 
     // 🚨 Nếu đã bị huỷ thì ignore
-  if (order.status === OrderStatus.CANCELLED) {
-    console.log(
-      `Ignore payment success for cancelled order ${order.id}`,
-    );
-    return;
-  }
+    if (order.status === OrderStatus.CANCELLED) {
+      console.log(
+        `Ignore payment success for cancelled order ${order.id}`,
+      );
+      return;
+    }
 
-  // Chỉ xử lý khi đang ở RESERVED
-  if (order.status !== OrderStatus.RESERVED) {
-    console.log(
-      `Unexpected payment success for order ${order.id} in status ${order.status}`,
-    );
-    return;
-  }
+    // Chỉ xử lý khi đang ở RESERVED
+    if (order.status !== OrderStatus.RESERVED) {
+      console.log(
+        `Unexpected payment success for order ${order.id} in status ${order.status}`,
+      );
+      return;
+    }
 
     order.paymentStatus = PaymentStatus.SUCCESS;
     order.status = OrderStatus.CONFIRMED;
@@ -313,5 +315,37 @@ export class OrderService {
     }
 
     return this.orderRepo.save(order);
+  }
+
+  // ================================
+  // ===== GET ORDERS BY USER =======
+  // ================================
+
+  async getOrdersByUser(userId: string) {
+    return this.orderRepo.find({
+      where: { userId },
+      relations: ['items'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  // ================================
+  // ===== GET ORDER DETAIL =========
+  // ================================
+
+  async getOrderDetail(orderId: string, userId: string) {
+    const order = await this.orderRepo.findOne({
+      where: {
+        id: orderId,
+        userId,
+      },
+      relations: ['items'],
+    });
+
+    if (!order) {
+      throw new BadRequestException('Order not found');
+    }
+
+    return order;
   }
 }
