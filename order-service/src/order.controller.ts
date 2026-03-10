@@ -20,6 +20,7 @@ export class OrderController {
 
   // CREATE ORDER
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Body() body: {
     items: {
       productId: number;
@@ -27,11 +28,8 @@ export class OrderController {
       price: number;
     }[];
     paymentMethod: PaymentMethod;
-  }, @Req() req: any) {
-    // If we use JwtAuthGuard, we can extract from req.user
-    // But since create order might not be strictly guarded yet, we check conditionally:
-    const userId = req.user?.userId;
-    return this.orderService.create({ ...body, userId });
+  }, @CurrentUser() user: { userId: string }) {
+    return this.orderService.create({ ...body, userId: user.userId });
   }
 
   // CANCEL ORDER
