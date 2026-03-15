@@ -73,6 +73,7 @@ export class ProductService {
       name: data.name,
       slug,
       description: data.description,
+      videoReviewUrl: data.videoReviewUrl,
       category,
       brand,
     });
@@ -390,4 +391,4 @@ export class ProductService {
     return { message: 'Product cache cleared successfully' };
   }
 
-}
+}
