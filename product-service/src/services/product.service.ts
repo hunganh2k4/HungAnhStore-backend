@@ -14,6 +14,7 @@ import { ProductImage } from '../entities/product-image.entity';
 import { Product } from '../entities/product.entity';
 import { slugify } from '../common/utils/slug.util';
 import axios from 'axios';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class ProductService {
@@ -35,6 +36,8 @@ export class ProductService {
 
     @InjectRepository(Product)
     private readonly productRepo: Repository<Product>,
+
+    private readonly redisService: RedisService,
   ) {}
 
   private async generateUniqueSlug(name: string): Promise<string> {
@@ -95,6 +98,7 @@ export class ProductService {
       relations: ['category', 'brand', 'images'],
     });
 
+    await this.redisService.delByPattern('products:all:*');
     return result;
   }
 
@@ -109,6 +113,12 @@ export class ProductService {
       category,
       search,
     } = query;
+
+    const cacheKey = `products:all:${page}:${limit}:${brand || ''}:${category || ''}:${search || ''}`;
+    const cachedData = await this.redisService.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
 
     const qb = this.productLineRepo
       .createQueryBuilder('product_lines')
@@ -186,12 +196,16 @@ export class ProductService {
       })) as ProductWithStock[];
     });
 
-    return {
+    const result = {
       data,
       total,
       page: Number(page),
       lastPage: Math.ceil(total / limit),
     };
+
+    await this.redisService.set(cacheKey, JSON.stringify(result), 3600); // Cache for 1 hour
+
+    return result;
   }
 
 
@@ -225,13 +239,23 @@ export class ProductService {
       productLine,
     });
 
-    return this.productRepo.save(product);
+    const savedProduct = await this.productRepo.save(product);
+    await this.redisService.del(`products:id:${productLineId}`);
+    await this.redisService.del(`products:slug:${productLine.slug}`);
+    await this.redisService.delByPattern('products:all:*');
+    return savedProduct;
   }
 
   // =============================
   // FIND ONE PRODUCT LINE
   // =============================
   async findOneProductLine(id: number) {
+    const cacheKey = `products:id:${id}`;
+    const cachedData = await this.redisService.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
+
     const productLine = await this.productLineRepo.findOne({
       where: { id },
       relations: ['category', 'brand', 'images', 'products', 'attributes'],
@@ -258,7 +282,6 @@ export class ProductService {
       inventories.map(inv => [inv.productId, inv.available]),
     );
 
-    // Merge stock vào response (KHÔNG sửa entity)
     const result = {
       ...productLine,
       products: productLine.products.map(p => ({
@@ -266,6 +289,8 @@ export class ProductService {
         stock: stockMap.get(p.id) ?? 0,
       })),
     };
+
+    await this.redisService.set(cacheKey, JSON.stringify(result), 3600); // Cache for 1 hour
 
     return result;
   }
@@ -278,7 +303,11 @@ export class ProductService {
 
     Object.assign(product, data);
 
-    return this.productRepo.save(product);
+    const saved = await this.productLineRepo.save(product);
+    await this.redisService.del(`products:id:${id}`);
+    await this.redisService.del(`products:slug:${product.slug}`);
+    await this.redisService.delByPattern('products:all:*');
+    return saved;
   }
 
   // =============================
@@ -286,7 +315,11 @@ export class ProductService {
   // =============================
   async removeProductLine(id: number) {
     const product = await this.findOneProductLine(id);
-    return this.productLineRepo.remove(product);
+    const result = await this.productLineRepo.remove(product);
+    await this.redisService.del(`products:id:${id}`);
+    await this.redisService.del(`products:slug:${product.slug}`);
+    await this.redisService.delByPattern('products:all:*');
+    return result;
   }
 
   // =============================
@@ -330,6 +363,12 @@ export class ProductService {
   // }
 
   async findProductLineBySlug(slug: string) {
+    const cacheKey = `products:slug:${slug}`;
+    const cachedData = await this.redisService.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
+
     const productLine = await this.productLineRepo.findOne({
       where: { slug },
       relations: ['category', 'brand', 'images', 'products', 'attributes'],
@@ -364,6 +403,8 @@ export class ProductService {
         stock: stockMap.get(p.id) ?? 0,
       })),
     };
+
+    await this.redisService.set(cacheKey, JSON.stringify(result), 3600); // Cache for 1 hour
 
     return result;
   }

@@ -16,6 +16,7 @@ import { ReviewService } from './services/review.service';
 import { ProductController } from './controller/product.controller';
 import { VariantController } from './controller/variant.controller';
 import { ReviewController } from './controller/review.controller';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ReviewController } from './controller/review.controller';
       Review,
       ReviewMedia,
     ]),
+    RedisModule,
   ],
   controllers: [ProductController, VariantController, ReviewController],
   providers: [ProductService, ReviewService],
