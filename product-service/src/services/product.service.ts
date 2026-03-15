@@ -74,6 +74,7 @@ export class ProductService {
       slug,
       description: data.description,
       videoReviewUrl: data.videoReviewUrl,
+      contentHtml: data.contentHtml,
       category,
       brand,
     });

@@ -29,6 +29,9 @@ export class ProductLine {
   @Column({ nullable: true })
   videoReviewUrl: string;
 
+  @Column('text', { nullable: true })
+  contentHtml: string;
+
   @ManyToOne(() => Category, category => category.productLines)
   category: Category;
 
