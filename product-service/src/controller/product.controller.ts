@@ -14,7 +14,12 @@ import { ProductService } from '../services/product.service';
 
 @Controller('product-lines')
 export class ProductController {
-  constructor(private readonly service: ProductService) {}
+  constructor(private readonly service: ProductService) { }
+
+  @Get('categories')
+  findAllCategories() {
+    return this.service.findAllCategories();
+  }
 
   // CREATE ONE PRODUCT LINE
   @Post()
@@ -62,5 +67,10 @@ export class ProductController {
   @Get('slug/:slug')
   findBySlug(@Param('slug') slug: string) {
     return this.service.findProductLineBySlug(slug);
+  }
+
+  @Delete('cache/clear')
+  clearProductCache() {
+    return this.service.clearCache();
   }
 }

@@ -38,7 +38,7 @@ export class ProductService {
     private readonly productRepo: Repository<Product>,
 
     private readonly redisService: RedisService,
-  ) {}
+  ) { }
 
   private async generateUniqueSlug(name: string): Promise<string> {
     const baseSlug = slugify(name);
@@ -76,7 +76,7 @@ export class ProductService {
       category,
       brand,
     });
-    
+
     const savedProductLine = await this.productLineRepo.save(productLine);
 
     // Tạo images nếu có
@@ -171,7 +171,7 @@ export class ProductService {
     const productIds = data
       .flatMap(pl => pl.products)
       .map(p => p.id);
-    
+
     const response = await axios.get(
       'http://localhost:4004/inventory/bulk',
       {
@@ -203,11 +203,24 @@ export class ProductService {
       lastPage: Math.ceil(total / limit),
     };
 
-    await this.redisService.set(cacheKey, JSON.stringify(result), 3600); // Cache for 1 hour
-
+    await this.redisService.set(cacheKey, JSON.stringify(result), 60); // 1 minute for list
     return result;
   }
 
+  // =============================
+  // CATEGORIES
+  // =============================
+  async findAllCategories() {
+    const cacheKey = 'categories:all';
+    const cachedData = await this.redisService.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
+
+    const categories = await this.categoryRepo.find();
+    await this.redisService.set(cacheKey, JSON.stringify(categories), 1800); // 30 minutes
+    return categories;
+  }
 
   // =============================
   // ADD PRODUCT TO PRODUCT LINE
@@ -215,7 +228,6 @@ export class ProductService {
   async addProduct(productLineId: number, data: any) {
     const productLine = await this.productLineRepo.findOne({
       where: { id: productLineId },
-      relations: ['products'],
     });
 
     if (!productLine) {
@@ -234,7 +246,7 @@ export class ProductService {
     const product = this.productRepo.create({
       sku: data.sku,
       color: data.color,
-      price: data.price, 
+      price: data.price,
       imageUrl: data.imageUrl,
       productLine,
     });
@@ -290,7 +302,7 @@ export class ProductService {
       })),
     };
 
-    await this.redisService.set(cacheKey, JSON.stringify(result), 3600); // Cache for 1 hour
+    await this.redisService.set(cacheKey, JSON.stringify(result), 600); // 10 minutes for detail
 
     return result;
   }
@@ -321,46 +333,6 @@ export class ProductService {
     await this.redisService.delByPattern('products:all:*');
     return result;
   }
-
-  // =============================
-  // STOCK IN
-  // =============================
-  // async stockIn(productId: number, quantity: number) {
-  //   const variant = await this.productRepo.findOne({
-  //     where: { id: productId },
-  //   });
-
-  //   if (!variant) {
-  //     throw new NotFoundException('Product in variant not found');
-  //   }
-
-  //   variant.stock += quantity;
-  //   await this.variantRepo.save(variant);
-
-  //   return { message: 'Stock added successfully' };
-  // }
-
-  // // =============================
-  // // STOCK OUT
-  // // =============================
-  // async stockOut(variantId: number, quantity: number) {
-  //   const variant = await this.variantRepo.findOne({
-  //     where: { id: variantId },
-  //   });
-
-  //   if (!variant) {
-  //     throw new NotFoundException('Product in variant not found');
-  //   }
-
-  //   if (variant.stock < quantity) {
-  //     throw new BadRequestException('Not enough stock');
-  //   }
-
-  //   variant.stock -= quantity;
-  //   await this.variantRepo.save(variant);
-
-  //   return { message: 'Stock out successfully' };
-  // }
 
   async findProductLineBySlug(slug: string) {
     const cacheKey = `products:slug:${slug}`;
@@ -404,9 +376,18 @@ export class ProductService {
       })),
     };
 
-    await this.redisService.set(cacheKey, JSON.stringify(result), 3600); // Cache for 1 hour
+    await this.redisService.set(cacheKey, JSON.stringify(result), 600); // 10 minutes for detail
 
     return result;
   }
 
-}
+  // =============================
+  // CACHE CONTROL
+  // =============================
+  async clearCache() {
+    await this.redisService.delByPattern('products:*');
+    await this.redisService.delByPattern('categories:*');
+    return { message: 'Product cache cleared successfully' };
+  }
+
+}
