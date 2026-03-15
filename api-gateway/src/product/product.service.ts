@@ -102,12 +102,37 @@ export class ProductService {
   }
 
   async findBySlug(slug: string) {
-    const response =  await firstValueFrom(
-        this.http.get(
-          `${this.productUrl}/product-lines/slug/${slug}`,
-        ),
+    try {
+      const response = await firstValueFrom(
+        this.http.get(`${this.productUrl}/product-lines/slug/${slug}`),
       );
-    return response.data;
+      return response.data;
+    } catch (error: any) {
+      this.handleError(error);
+    }
+  }
+
+  // REVIEWS
+  async createReview(body: any) {
+    try {
+      const res = await firstValueFrom(
+        this.http.post(`${this.productUrl}/reviews`, body),
+      );
+      return res.data;
+    } catch (error: any) {
+      this.handleError(error);
+    }
+  }
+
+  async getReviews(productLineId: number) {
+    try {
+      const res = await firstValueFrom(
+        this.http.get(`${this.productUrl}/reviews/${productLineId}`),
+      );
+      return res.data;
+    } catch (error: any) {
+      this.handleError(error);
+    }
   }
 
   // SIMPLE ERROR HANDLER
