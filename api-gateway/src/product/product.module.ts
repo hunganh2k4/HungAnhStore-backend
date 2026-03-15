@@ -4,9 +4,10 @@ import { ReviewController } from './review.controller';
 import { ProductService } from './product.service';
 import { ReviewService } from './review.service';
 import { HttpModule } from '@nestjs/axios';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, AuthModule],
   controllers: [ProductController, ReviewController],
   providers: [ProductService, ReviewService],
 })

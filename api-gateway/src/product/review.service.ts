@@ -34,7 +34,7 @@ export class ReviewService {
     async getReviews(productLineId: number) {
         try {
             const res = await firstValueFrom(
-                this.http.get(`${this.productUrl}/reviews/${productLineId}`),
+                this.http.get(`${this.productUrl}/reviews/product-line/${productLineId}`),
             );
             return res.data;
         } catch (error: any) {

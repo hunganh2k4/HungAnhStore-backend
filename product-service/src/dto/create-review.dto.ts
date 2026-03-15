@@ -12,7 +12,15 @@ export class CreateReviewDto {
   productLineId: number;
 
   @IsString()
-  userId: String;
+  userId: string;
+
+  @IsOptional()
+  @IsString()
+  userName?: string;
+
+  @IsOptional()
+  @IsString()
+  userAvatar?: string;
 
   @IsInt()
   @Min(1)

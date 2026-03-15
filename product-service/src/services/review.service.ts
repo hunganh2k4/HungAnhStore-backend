@@ -1,11 +1,10 @@
 import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Review } from '../entities/review.entity';
 import { ReviewMedia } from '../entities/review-media.entity';
 import { CreateReviewDto } from '../dto/create-review.dto';
 import axios from 'axios';
-import { DataSource } from 'typeorm';
 
 @Injectable()
 export class ReviewService {
@@ -18,35 +17,43 @@ export class ReviewService {
     private mediaRepo: Repository<ReviewMedia>,
 
     private dataSource: DataSource,
-  ) {}
+  ) { }
 
   async createReview(dto: CreateReviewDto) {
-    // Use transaction to ensure data consistency between review and media
-    const queryRunner = this.dataSource.createQueryRunner();
+    // Kiểm tra xem user đã review sản phẩm này chưa (trước khi tạo giao dịch)
+    const existingReview = await this.reviewRepo.findOne({
+      where: {
+        productLineId: dto.productLineId,
+        userId: dto.userId,
+      },
+    });
 
+    if (existingReview) {
+      throw new BadRequestException('Bạn đã đánh giá sản phẩm này rồi.');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      // Tạo Review
+      const review = queryRunner.manager.create(Review, {
+        productLineId: dto.productLineId,
+        userId: dto.userId,
+        userName: dto.userName,
+        userAvatar: dto.userAvatar,
+        rating: dto.rating,
+        comment: dto.comment,
+      });
 
-      const review = queryRunner.manager.create(
-        Review,
-        {
-          productLineId: dto.productLineId,
-          userId: dto.userId,
-          rating: dto.rating,
-          comment: dto.comment,
-        },
-      );
+      const savedReview = await queryRunner.manager.save(review);
 
-      const savedReview =
-        await queryRunner.manager.save(review);
-
+      // Xử lý Media nếu có
       if (dto.medias && dto.medias.length > 0) {
+        const publicIds = dto.medias.map(m => m.publicId);
 
-        const publicIds =
-          dto.medias.map(m => m.publicId);
-
+        // Xác nhận media với media-service
         const res = await axios.post(
           'http://localhost:4006/media/confirm-review',
           { publicIds },
@@ -56,7 +63,7 @@ export class ReviewService {
           queryRunner.manager.create(ReviewMedia, {
             url: m.url,
             publicId: m.publicId,
-            type: 'image',
+            type: 'image', // Hoặc lấy từ media-service nếu cần
             review: savedReview,
           }),
         );
@@ -65,22 +72,20 @@ export class ReviewService {
       }
 
       await queryRunner.commitTransaction();
-
       return savedReview;
 
     } catch (error) {
-
       await queryRunner.rollbackTransaction();
 
-      if (error.response) {
-        throw new BadRequestException(
-          error.response.data.message,
-        );
+      if (error instanceof BadRequestException) {
+        throw error;
       }
 
-      throw new InternalServerErrorException(
-        'Media service unavailable',
-      );
+      if (error.response) {
+        throw new BadRequestException(error.response.data.message || 'Lỗi từ Media Service');
+      }
+
+      throw new InternalServerErrorException('Không thể tạo đánh giá lúc này.');
 
     } finally {
       await queryRunner.release();

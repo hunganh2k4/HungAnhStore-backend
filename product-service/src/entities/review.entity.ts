@@ -17,7 +17,13 @@ export class Review {
   productLineId: number;
 
   @Column()
-  userId: String;
+  userId: string;
+
+  @Column({ nullable: true })
+  userName: string;
+
+  @Column({ nullable: true })
+  userAvatar: string;
 
   @Column()
   rating: number; // 1-5 sao
