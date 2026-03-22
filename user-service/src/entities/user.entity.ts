@@ -39,6 +39,9 @@ export class User {
   @Column({ nullable: true })
   gender: string;
 
+  @Column({ type: 'date', nullable: true })
+  birthday: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

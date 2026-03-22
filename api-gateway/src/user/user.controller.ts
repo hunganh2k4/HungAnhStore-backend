@@ -5,12 +5,13 @@ import {
   Put,
   Param,
   Body,
+  Headers,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   // CREATE USER
   @Post()
@@ -34,5 +35,13 @@ export class UserController {
   @Put(':id/enable')
   enable(@Param('id') id: string) {
     return this.userService.enableUser(id);
+  }
+
+  @Put('me')
+  updateMe(
+    @Body() body: any,
+    @Headers('authorization') authHeader: string,
+  ) {
+    return this.userService.updateMe(body, authHeader);
   }
 }

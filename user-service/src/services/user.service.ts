@@ -105,4 +105,22 @@ export class UserService {
     const { password, ...result } = user;
     return result;
   }
+
+
+  async updateUser(id: string, body: any) {
+    const user = await this.repo.findOne({
+      where: { id, deleted: false },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    user.name = body.name;
+    user.phone = body.phone;
+    user.gender = body.gender;
+    user.birthday = body.birthday;
+
+    await this.repo.save(user);
+
+    return this.removePassword(user);
+  }
 }

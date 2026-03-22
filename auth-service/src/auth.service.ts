@@ -19,7 +19,7 @@ export class AuthService {
     private readonly mailService: MailService,
     private readonly redisService: RedisService,
 
-  ) {}
+  ) { }
 
   async register(email: string, password: string, name: string) {
     try {
@@ -67,8 +67,8 @@ export class AuthService {
 
       throw new BadRequestException(
         err?.response?.data?.message ||
-          err.message ||
-          'Register failed',
+        err.message ||
+        'Register failed',
       );
     }
   }
@@ -81,7 +81,7 @@ export class AuthService {
 
       await firstValueFrom(
         this.http.put(
-          `http://localhost:4003/users/${payload.userId}/enable`, 
+          `http://localhost:4003/users/${payload.userId}/enable`,
           {},
           {
             headers: {
@@ -155,7 +155,10 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
-        avatar: user.avatar
+        avatar: user.avatar,
+        birthday: user.birthday,
+        gender: user.gender,
+        phone: user.phone,
       }
     };
   }
@@ -243,9 +246,9 @@ export class AuthService {
 
   private generateSystemToken() {
     return this.jwtService.sign(
-      { 
+      {
         userId: 'SYSTEM',
-        role: 'SYSTEM' 
+        role: 'SYSTEM'
       },
       { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '1h' },
     );

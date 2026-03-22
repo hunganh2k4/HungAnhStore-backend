@@ -76,4 +76,13 @@ export class UserController {
   async me(@CurrentUser() user: { id: string }) {
     return this.userService.findById(user.id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('me')
+  async updateMe(
+    @CurrentUser() user: { id: string },
+    @Body() body: any,
+  ) {
+    return this.userService.updateUser(user.id, body);
+  }
 }

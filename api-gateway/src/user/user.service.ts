@@ -73,6 +73,21 @@ export class UserService {
     }
   }
 
+  async updateMe(body: any, authHeader: string) {
+    try {
+      const res = await firstValueFrom(
+        this.http.put(
+          `${this.userUrl}/users/me`,
+          body,
+          { headers: { authorization: authHeader } },
+        ),
+      );
+      return res.data;
+    } catch (error: any) {
+      this.handleError(error);
+    }
+  }
+
   private handleError(error: any): never {
     if (error.response) {
       throw new HttpException(
