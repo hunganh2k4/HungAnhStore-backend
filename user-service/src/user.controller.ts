@@ -16,7 +16,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   // ===============================
   // PUBLIC ROUTE
@@ -74,6 +74,6 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async me(@CurrentUser() user: { id: string }) {
-    return this.userService.findById(user.id); 
+    return this.userService.findById(user.id);
   }
 }

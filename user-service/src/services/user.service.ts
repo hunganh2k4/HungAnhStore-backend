@@ -13,7 +13,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly repo: Repository<User>,
-  ) {}
+  ) { }
 
   // ===============================
   // CREATE USER (internal)
@@ -27,11 +27,9 @@ export class UserService {
       throw new BadRequestException('Email already exists');
     }
 
-    console.log('Creating user with name:', name);
-
     const user = this.repo.create({
-      email,
-      password,
+      email: email,
+      password: password,
       name: name,
       avatar: null,
       enable: false,
@@ -101,7 +99,7 @@ export class UserService {
 
     return this.removePassword(user); // trả về không có password
   }
-  
+
 
   private removePassword(user: User) {
     const { password, ...result } = user;

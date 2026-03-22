@@ -17,7 +17,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-  ) {}
+  ) { }
 
   @Post('register')
   register(@Body() dto: RegisterDto) {
@@ -54,7 +54,7 @@ export class AuthController {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    return { accessToken , user };
+    return { accessToken, user };
   }
 
   // ===============================

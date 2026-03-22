@@ -3,7 +3,9 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Address } from './address.entity';
 
 @Entity('users')
 export class User {
@@ -16,9 +18,9 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ type: 'nvarchar'})
+  @Column({ type: 'nvarchar' })
   name: string;
-  
+
   @Column({ type: 'nvarchar', nullable: true })
   avatar: string | null;
 
@@ -28,6 +30,18 @@ export class User {
   @Column({ default: false })
   deleted: boolean;
 
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ default: false })
+  isPhoneVerified: boolean;
+
+  @Column({ nullable: true })
+  gender: string;
+
   @CreateDateColumn()
   createdAt: Date;
+
+  @OneToMany(() => Address, (address) => address.user)
+  addresses: Address[];
 }
