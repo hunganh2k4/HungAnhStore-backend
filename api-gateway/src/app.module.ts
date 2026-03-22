@@ -9,6 +9,7 @@ import { OrderModule } from './order/order.module';
 import { CartModule } from './cart/cart.module';
 import { PaymentModule } from './payment/payment.module';
 import { MediaModule } from './media/media.module';
+import { RecommendationModule } from './recommendation/recommendation.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { MediaModule } from './media/media.module';
     OrderModule,
     CartModule,
     PaymentModule,
-    MediaModule
+    MediaModule,
+    RecommendationModule
   ],
 })
 export class AppModule {}
