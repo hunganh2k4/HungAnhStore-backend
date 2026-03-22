@@ -6,6 +6,7 @@ import {
   Patch,
   Get,
   Headers,
+  Query
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 
@@ -58,8 +59,16 @@ export class OrderController {
 
   // GET MY ORDERS
   @Get('my-orders')
-  getMyOrders(@Headers('authorization') authHeader: string) {
-    return this.orderService.getMyOrders(authHeader);
+  getMyOrders(
+    @Headers('authorization') authHeader: string,
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+  ) {
+    return this.orderService.getMyOrders(
+      authHeader,
+      page,
+      limit,
+    );
   }
 
   // GET ORDER DETAIL

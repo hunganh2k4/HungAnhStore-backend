@@ -321,12 +321,22 @@ export class OrderService {
   // ===== GET ORDERS BY USER =======
   // ================================
 
-  async getOrdersByUser(userId: string) {
-    return this.orderRepo.find({
+  async getOrdersByUser(userId: string, page: number, limit: number) {
+    const [data, total] = await this.orderRepo.findAndCount({
       where: { userId },
-      relations: ['items'],
-      order: { createdAt: 'DESC' },
+      relations: ["items"],
+      order: { createdAt: "DESC" },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   // ================================

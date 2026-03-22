@@ -95,10 +95,10 @@ export class OrderService {
   }
 
   // GET MY ORDERS
-  async getMyOrders(authHeader: string) {
+  async getMyOrders(authHeader: string, page: number, limit: number) {
     try {
       const res = await firstValueFrom(
-        this.http.get(`${this.orderUrl}/orders/my-orders`, {
+        this.http.get(`${this.orderUrl}/orders/my-orders?page=${page}&limit=${limit}`, {
           headers: {
             Authorization: authHeader,
           },

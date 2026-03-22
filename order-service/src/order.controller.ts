@@ -6,7 +6,8 @@ import {
   Patch,
   UseGuards,
   Get,
-  Req
+  Req,
+  Query
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { PaymentMethod } from './entities/order.entity';
@@ -55,8 +56,12 @@ export class OrderController {
   // ================================
   @UseGuards(JwtAuthGuard)
   @Get('my-orders')
-  async getMyOrders(@CurrentUser() user: { userId: string }) {
-    return this.orderService.getOrdersByUser(user.userId);
+  async getMyOrders(@CurrentUser() user: { userId: string },
+    @Query("page") page: number,
+    @Query("limit") limit: number,
+  ) {
+    console.log(page, limit);
+    return this.orderService.getOrdersByUser(user.userId, page || 1, limit || 10);
   }
 
   // ================================
