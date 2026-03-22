@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 
 import { ProductLine } from '../entities/product-line.entity';
 import { Category } from '../entities/category.entity';
@@ -381,6 +381,17 @@ export class ProductService {
     await this.redisService.set(cacheKey, JSON.stringify(result), 600); // 10 minutes for detail
 
     return result;
+  }
+
+  // =============================
+  // FIND PRODUCTS BY IDS
+  // =============================
+  async findProductsByIds(ids: number[]) {
+    return this.productLineRepo.find({
+      where: {
+        id: In(ids),
+      },
+    });
   }
 
   // =============================

@@ -33,6 +33,12 @@ export class ProductController {
     return this.service.findAllProductLine(query);
   }
 
+  @Get('bulk')
+  getBulk(@Query('ids') ids: string) {
+    const idArray = ids.split(',').map(id => Number(id));
+    return this.service.findProductsByIds(idArray);
+  }
+
   // GET ONE PRODUCT LINE
   @Get(':id')
   findOneProductLine(@Param('id', ParseIntPipe) id: number) {
@@ -68,6 +74,7 @@ export class ProductController {
   findBySlug(@Param('slug') slug: string) {
     return this.service.findProductLineBySlug(slug);
   }
+
 
   @Delete('cache/clear')
   clearProductCache() {

@@ -6,16 +6,20 @@ import { UserService } from './services/user.service';
 import { Address } from './entities/address.entity';
 import { AddressController } from './controllers/address.controller';
 import { AddressService } from './services/address.service';
+import { Favorite } from './entities/favorite.entity';
+import { FavoriteController } from './controllers/favorite.controller';
+import { FavoriteService } from './services/favorite.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       User,
       Address,
+      Favorite,
     ]),
   ],
-  controllers: [UserController, AddressController],
-  providers: [UserService, AddressService],
+  controllers: [UserController, AddressController, FavoriteController],
+  providers: [UserService, AddressService, FavoriteService],
   exports: [UserService],
 })
 export class UserModule { }
