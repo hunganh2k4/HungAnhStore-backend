@@ -27,6 +27,8 @@ export class OrderController {
       productId: number;
       quantity: number;
       price: number;
+      productName: string;
+      productImage: string;
     }[];
     paymentMethod: PaymentMethod;
   }, @CurrentUser() user: { userId: string }) {

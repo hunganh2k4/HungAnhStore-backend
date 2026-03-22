@@ -15,6 +15,12 @@ export class OrderItem {
   productId: number;
 
   @Column()
+  productName: string;
+
+  @Column()
+  productImage: string;
+
+  @Column()
   quantity: number;
 
   @Column()

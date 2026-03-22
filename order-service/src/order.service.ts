@@ -44,6 +44,8 @@ export class OrderService {
     return order.items.map(i => ({
       productId: i.productId,
       quantity: i.quantity,
+      productName: i.productName,
+      productImage: i.productImage,
     }));
   }
 
@@ -52,7 +54,7 @@ export class OrderService {
   // ================================
 
   async create(dto: {
-    items: { productId: number; quantity: number; price: number }[];
+    items: { productId: number; quantity: number; price: number, productName: string, productImage: string }[];
     paymentMethod: PaymentMethod;
     userId: string;
   }) {
