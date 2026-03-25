@@ -57,4 +57,12 @@ export class CartService {
   async removeItem(itemId: number) {
     return this.itemRepo.delete(itemId);
   }
+
+  async clearCart(userId: string) {
+    console.log(`Clearing cart for user: ${userId}`);
+    const cart = await this.cartRepo.findOne({ where: { userId } });
+    if (cart) {
+      await this.itemRepo.delete({ cart: { id: cart.id } });
+    }
+  }
 }

@@ -15,6 +15,9 @@ export class Payment {
 
   @Column()
   orderId: string;
+ 
+  @Column({ nullable: true })
+  userId: string;
 
   @Column({ type: 'decimal', precision: 15, scale: 2 })
   amount: number;

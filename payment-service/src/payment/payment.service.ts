@@ -18,10 +18,10 @@ export class PaymentService {
     private vnpayService: VnpayService,
   ) {}
 
-  private async publish(topic: string, payload: { orderId: string }) {
+  private async publish(topic: string, payload: { orderId?: string; userId?: string }) {
     await this.producer.send({
       topic,
-      messages: [{ key: payload.orderId, value: JSON.stringify(payload) }],
+      messages: [{ key: payload.orderId || payload.userId, value: JSON.stringify(payload) }],
     });
   }
 
@@ -33,7 +33,7 @@ export class PaymentService {
   }
 
   /** Kafka: xử lý payment.process từ order-service */
-  async handlePaymentProcess(data: { orderId: string; amount: number }) {
+  async handlePaymentProcess(data: { orderId: string; amount: number; userId?: string }) {
     const existing = await this.paymentRepo.findOne({
       where: { orderId: data.orderId },
     });
@@ -45,6 +45,7 @@ export class PaymentService {
     const baseUrl = this.getBaseUrl();
     const payment = this.paymentRepo.create({
       orderId: data.orderId,
+      userId: data.userId,
       amount: data.amount,
       status: PaymentStatus.PROCESSING,
       vnpTxnRef: data.orderId,
@@ -168,11 +169,12 @@ export class PaymentService {
     if (isSuccess) {
       payment.status = PaymentStatus.SUCCESS;
       await this.paymentRepo.save(payment);
-      await this.publish('payment.succeeded', { orderId: payment.orderId });
+      await this.publish('payment.succeeded', { orderId: payment.orderId, userId: payment.userId });
+      await this.publish('cart.clear', { userId: payment.userId });
     } else {
       payment.status = PaymentStatus.FAILED;
       await this.paymentRepo.save(payment);
-      await this.publish('payment.failed', { orderId: payment.orderId });
+      await this.publish('payment.failed', { orderId: payment.orderId, userId: payment.userId });
     }
 
     return {

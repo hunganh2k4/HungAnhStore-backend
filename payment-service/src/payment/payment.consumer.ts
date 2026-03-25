@@ -8,7 +8,7 @@ export class PaymentConsumer {
 
   @EventPattern('payment.process')
   async handlePaymentProcess(
-    @Payload() data: { orderId: string; amount: number },
+    @Payload() data: { orderId: string; amount: number; userId?: string },
   ) {
     console.log('Payment process received:', data);
     await this.paymentService.handlePaymentProcess(data);

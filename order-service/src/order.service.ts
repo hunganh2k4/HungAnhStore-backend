@@ -106,18 +106,17 @@ export class OrderService {
       await this.publish('payment.process', {
         orderId: order.id,
         amount: order.totalPrice,
+        userId: order.userId,
       });
     }
 
     // COD → skip payment → confirm luôn
     if (order.paymentMethod === PaymentMethod.COD) {
-      // await this.publish('order.confirm', {
-      //   orderId: order.id,
-      //   productId: order.productId,
-      //   quantity: order.quantity,
-      // });
       order.status = OrderStatus.CONFIRMED;
       await this.orderRepo.save(order);
+      await this.publish('cart.clear', {
+        userId: order.userId,
+      });
     }
   }
 
